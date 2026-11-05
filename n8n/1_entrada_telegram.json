@@ -1,0 +1,1193 @@
+{
+ "name": "GastoClaro · 1 Entrada Telegram",
+ "nodes": [
+  {
+   "id": "52ca21e7-d64f-4d06-8eee-de53a4fc9860",
+   "name": "Telegram Trigger",
+   "type": "n8n-nodes-base.telegramTrigger",
+   "typeVersion": 1.2,
+   "position": [
+    0,
+    300
+   ],
+   "parameters": {
+    "updates": [
+     "message",
+     "callback_query"
+    ],
+    "additionalFields": {}
+   },
+   "credentials": {
+    "telegramApi": {
+     "id": "__CRED_TG__",
+     "name": "Telegram GastoClaro"
+    }
+   },
+   "webhookId": "04428244-bb9e-45c3-8c25-aea685adb4da"
+  },
+  {
+   "id": "e66c38de-76c7-41b9-bde7-28688b14796c",
+   "name": "Normalizar evento",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    220,
+    300
+   ],
+   "parameters": {
+    "jsCode": "const u = $input.first().json;\nconst cb = u.callback_query;\nconst msg = cb ? cb.message : u.message;\nconst ev = { event_key: 'tg-' + (u.update_id ?? (msg && msg.message_id)), chat_id: String(cb ? cb.from.id : (msg && msg.chat && msg.chat.id) || ''),\n  texto: cb ? '' : String((msg && (msg.text || msg.caption)) || '').trim(), tiene_texto: !!(msg && msg.text), tipo: cb ? 'decision' : 'mensaje',\n  callback_id: cb ? cb.id : '', callback_data: cb ? String(cb.data || '') : '', message_id: msg ? msg.message_id : null, recibido: new Date().toISOString() };\nreturn [{ json: ev }];"
+   }
+  },
+  {
+   "id": "583ba68b-6c82-4507-8895-3f7e401b3541",
+   "name": "Buscar evento (deduplicación)",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    440,
+    300
+   ],
+   "parameters": {
+    "resource": "row",
+    "operation": "get",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "id",
+     "value": "__DT_eventos__"
+    },
+    "matchType": "allConditions",
+    "filters": {
+     "conditions": [
+      {
+       "keyName": "event_key",
+       "condition": "eq",
+       "keyValue": "={{ $json.event_key }}"
+      }
+     ]
+    },
+    "returnAll": false,
+    "limit": 1
+   },
+   "alwaysOutputData": true
+  },
+  {
+   "id": "dc99ae7a-576b-4d07-a074-1a5a4f2c5fb9",
+   "name": "¿Evento nuevo?",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    660,
+    300
+   ],
+   "parameters": {
+    "jsCode": "const ev = $('Normalizar evento').first().json;\nconst dup = $input.all().some(i => i.json && i.json.event_key === ev.event_key);\nreturn [{ json: { ...ev, duplicado: dup } }];"
+   }
+  },
+  {
+   "id": "62635f2d-63b5-40c5-bb54-7336229ffbc6",
+   "name": "Nuevo evento",
+   "type": "n8n-nodes-base.if",
+   "typeVersion": 2.2,
+   "position": [
+    880,
+    300
+   ],
+   "parameters": {
+    "conditions": {
+     "options": {
+      "caseSensitive": true,
+      "leftValue": "",
+      "typeValidation": "loose",
+      "version": 2
+     },
+     "conditions": [
+      {
+       "id": "3454e981-e620-430e-8ce5-1066cb2e0729",
+       "leftValue": "={{ !$json.duplicado }}",
+       "rightValue": "",
+       "operator": {
+        "type": "boolean",
+        "operation": "true",
+        "singleValue": true
+       }
+      }
+     ],
+     "combinator": "and"
+    },
+    "options": {}
+   }
+  },
+  {
+   "id": "9e72caaa-b4e1-4ce0-8811-1b4a6ae4dff8",
+   "name": "Fila evento",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    1100,
+    300
+   ],
+   "parameters": {
+    "jsCode": "const e=$input.first().json; return [{ json: { event_key: e.event_key, tipo: e.tipo, caso_id: (e.callback_data.split('|')[2]||'') } }];"
+   }
+  },
+  {
+   "id": "93b93673-84ca-4c7b-99ab-b46e3f4c474b",
+   "name": "Registrar evento",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    1320,
+    300
+   ],
+   "parameters": {
+    "resource": "row",
+    "operation": "insert",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "id",
+     "value": "__DT_eventos__"
+    },
+    "columns": {
+     "mappingMode": "autoMapInputData",
+     "value": {},
+     "matchingColumns": [],
+     "schema": []
+    },
+    "options": {}
+   }
+  },
+  {
+   "id": "0b1ac60d-63e1-427c-9ef9-83e8aea3c380",
+   "name": "Buscar usuario autorizado",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    1540,
+    300
+   ],
+   "parameters": {
+    "resource": "row",
+    "operation": "get",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "id",
+     "value": "__DT_usuarios__"
+    },
+    "matchType": "allConditions",
+    "filters": {
+     "conditions": [
+      {
+       "keyName": "chat_id",
+       "condition": "eq",
+       "keyValue": "={{ $('Normalizar evento').first().json.chat_id }}"
+      }
+     ]
+    },
+    "returnAll": false,
+    "limit": 1
+   },
+   "alwaysOutputData": true
+  },
+  {
+   "id": "3296381f-61f4-4905-9bd0-bfd6390b3a7c",
+   "name": "Autorizar y enrutar",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    1760,
+    300
+   ],
+   "parameters": {
+    "jsCode": "const ev = $('Normalizar evento').first().json;\nconst u = $input.all().map(i => i.json).find(x => x.chat_id === ev.chat_id && x.activo) || null;\nlet ruta = 'invalido', caso_id = '', accion = '', version = 0;\nconst t = ev.texto;\nif (!u) ruta = 'no_autorizado';\nelse if (ev.tipo === 'decision') { const p = ev.callback_data.split('|'); if (p[0] === 'd' && ['ap', 'rc'].includes(p[1]) && /^GAS-\\d{4}$/.test(p[2] || '')) { ruta = 'decision'; accion = p[1]; caso_id = p[2]; version = Number(p[3] || 0); } }\nelse if (!ev.tiene_texto) ruta = 'sin_texto';\nelse if (/^\\/(start|ayuda|help)/i.test(t)) ruta = 'ayuda';\nelse if (/^\\/estado/i.test(t)) { const m = t.toUpperCase().match(/GAS-?\\s?(\\d{1,4})/); ruta = m ? 'estado' : 'estado_sin_folio'; caso_id = m ? 'GAS-' + m[1].padStart(4, '0') : ''; }\nelse if (/^\\/nuevo/i.test(t)) ruta = 'nuevo';\nelse ruta = 'invalido';\nconst puedeSolicitar = u && ['solicitante', 'ambos'].includes(u.rol), puedeAprobar = u && ['aprobador', 'ambos'].includes(u.rol);\nif (ruta === 'nuevo' && !puedeSolicitar) ruta = 'no_autorizado';\nreturn [{ json: { ...ev, ruta, caso_id, accion, version, alias: u ? u.alias : '', rol: u ? u.rol : '', puedeAprobar: !!puedeAprobar } }];"
+   }
+  },
+  {
+   "id": "c632e898-6730-4597-bdf0-769654462c83",
+   "name": "Enrutar",
+   "type": "n8n-nodes-base.switch",
+   "typeVersion": 3.2,
+   "position": [
+    1980,
+    300
+   ],
+   "parameters": {
+    "rules": {
+     "values": [
+      {
+       "conditions": {
+        "options": {
+         "caseSensitive": true,
+         "typeValidation": "strict",
+         "version": 2
+        },
+        "combinator": "and",
+        "conditions": [
+         {
+          "id": "fe02e7b0-b684-4cf1-bf18-e43e8ccd113c",
+          "leftValue": "={{ $json.ruta }}",
+          "rightValue": "nuevo",
+          "operator": {
+           "type": "string",
+           "operation": "equals"
+          }
+         }
+        ]
+       },
+       "renameOutput": true,
+       "outputKey": "nuevo"
+      },
+      {
+       "conditions": {
+        "options": {
+         "caseSensitive": true,
+         "typeValidation": "strict",
+         "version": 2
+        },
+        "combinator": "and",
+        "conditions": [
+         {
+          "id": "dd4486e1-8873-4aea-b918-56cb73c61a4c",
+          "leftValue": "={{ $json.ruta }}",
+          "rightValue": "estado",
+          "operator": {
+           "type": "string",
+           "operation": "equals"
+          }
+         }
+        ]
+       },
+       "renameOutput": true,
+       "outputKey": "estado"
+      },
+      {
+       "conditions": {
+        "options": {
+         "caseSensitive": true,
+         "typeValidation": "strict",
+         "version": 2
+        },
+        "combinator": "and",
+        "conditions": [
+         {
+          "id": "217aa9f0-38d5-40fa-b093-fa84ed34307b",
+          "leftValue": "={{ $json.ruta }}",
+          "rightValue": "decision",
+          "operator": {
+           "type": "string",
+           "operation": "equals"
+          }
+         }
+        ]
+       },
+       "renameOutput": true,
+       "outputKey": "decision"
+      },
+      {
+       "conditions": {
+        "options": {
+         "caseSensitive": true,
+         "typeValidation": "strict",
+         "version": 2
+        },
+        "combinator": "and",
+        "conditions": [
+         {
+          "id": "76ab0a7e-6ddf-451f-89be-64fa7282154e",
+          "leftValue": "={{ $json.ruta }}",
+          "rightValue": "ayuda",
+          "operator": {
+           "type": "string",
+           "operation": "equals"
+          }
+         }
+        ]
+       },
+       "renameOutput": true,
+       "outputKey": "ayuda"
+      },
+      {
+       "conditions": {
+        "options": {
+         "caseSensitive": true,
+         "typeValidation": "strict",
+         "version": 2
+        },
+        "combinator": "and",
+        "conditions": [
+         {
+          "id": "ca81a3ee-6d92-42c8-9c54-5f37d5f57e7c",
+          "leftValue": "={{ $json.ruta }}",
+          "rightValue": "no_autorizado",
+          "operator": {
+           "type": "string",
+           "operation": "equals"
+          }
+         }
+        ]
+       },
+       "renameOutput": true,
+       "outputKey": "no_autorizado"
+      }
+     ]
+    },
+    "options": {
+     "fallbackOutput": "extra",
+     "renameFallbackOutput": "otro"
+    }
+   }
+  },
+  {
+   "id": "fd96516c-1b3b-46e7-a001-3fe55c512c67",
+   "name": "Duplicado ignorado",
+   "type": "n8n-nodes-base.noOp",
+   "typeVersion": 1,
+   "position": [
+    1100,
+    480
+   ],
+   "parameters": {}
+  },
+  {
+   "id": "4994c693-7f3a-400d-b578-f879b77a211b",
+   "name": "Acuse de recibo",
+   "type": "n8n-nodes-base.telegram",
+   "typeVersion": 1.2,
+   "position": [
+    2200,
+    0
+   ],
+   "parameters": {
+    "chatId": "={{ $json.chat_id }}",
+    "text": "=📥 Recibí tu solicitud. La procesan 4 agentes (Intake → Datos → Análisis → Revisor). Te aviso en unos segundos.",
+    "additionalFields": {
+     "appendAttribution": false,
+     "parse_mode": "HTML",
+     "disable_web_page_preview": true
+    }
+   },
+   "credentials": {
+    "telegramApi": {
+     "id": "__CRED_TG__",
+     "name": "Telegram GastoClaro"
+    }
+   }
+  },
+  {
+   "id": "2e6ef5cd-fa0d-4f71-b6dd-298543dac345",
+   "name": "Preparar caso",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    2420,
+    0
+   ],
+   "parameters": {
+    "jsCode": "const e=$('Autorizar y enrutar').first().json; return [{ json: { canal:'telegram', chat_id:e.chat_id, usuario:e.alias, texto:e.texto } }];"
+   }
+  },
+  {
+   "id": "6306c6bb-0b0e-41ea-9d16-b1a4d7aec5e6",
+   "name": "Ejecutar orquestador",
+   "type": "n8n-nodes-base.executeWorkflow",
+   "typeVersion": 1.2,
+   "position": [
+    2640,
+    0
+   ],
+   "parameters": {
+    "workflowId": {
+     "__rl": true,
+     "mode": "id",
+     "value": "__WF_ORQ__"
+    },
+    "options": {
+     "waitForSubWorkflow": true
+    }
+   }
+  },
+  {
+   "id": "5d1062d9-0574-43d7-9b4f-e04ef59ef40d",
+   "name": "Resultado al solicitante",
+   "type": "n8n-nodes-base.telegram",
+   "typeVersion": 1.2,
+   "position": [
+    2860,
+    0
+   ],
+   "parameters": {
+    "chatId": "={{ $json.chat_solicitante }}",
+    "text": "={{ $json.mensaje_solicitante }}",
+    "additionalFields": {
+     "appendAttribution": false,
+     "parse_mode": "HTML",
+     "disable_web_page_preview": true
+    }
+   },
+   "credentials": {
+    "telegramApi": {
+     "id": "__CRED_TG__",
+     "name": "Telegram GastoClaro"
+    }
+   }
+  },
+  {
+   "id": "43b446f0-ff01-40f8-ad39-a40fe5928e31",
+   "name": "Leer caso",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    2200,
+    200
+   ],
+   "parameters": {
+    "resource": "row",
+    "operation": "get",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "id",
+     "value": "__DT_casos__"
+    },
+    "matchType": "allConditions",
+    "filters": {
+     "conditions": [
+      {
+       "keyName": "caso_id",
+       "condition": "eq",
+       "keyValue": "={{ $json.caso_id }}"
+      }
+     ]
+    },
+    "returnAll": false,
+    "limit": 1
+   },
+   "alwaysOutputData": true
+  },
+  {
+   "id": "7512f834-5779-46f3-8d0e-a12b68917dcf",
+   "name": "Formatear estado",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    2420,
+    200
+   ],
+   "parameters": {
+    "jsCode": "const e = $('Autorizar y enrutar').first().json;\nconst c = $input.all().map(i => i.json).find(x => x.caso_id === e.caso_id);\nconst esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\nconst fmt = n => Number(n || 0).toLocaleString('es-MX');\nlet t;\nif (!c || (c.chat_solicitante !== e.chat_id && !e.puedeAprobar)) t = `No encontré el folio ${esc(e.caso_id)} entre tus casos.`;\nelse t = `<b>${esc(c.caso_id)}</b> · estado: <b>${esc(c.estado)}</b>\\n${esc(c.concepto)}\\nCC ${esc(c.centro_costo)} · $${fmt(c.monto_total)} MXN\\nRecomendación: ${esc(c.recomendacion || 'n/d')} · Revisión: ${esc(c.veredicto || 'n/d')} (v${c.version})` +\n  (c.decision ? `\\nDecisión: ${esc(c.decision)}` : '') + (c.aprobacion_expira && c.estado === 'pendiente_aprobacion' ? `\\nExpira: ${new Date(c.aprobacion_expira).toLocaleString('es-MX', { timeZone: 'America/Mexico_City' })}` : '') + '\\n<i>Resultado simulado</i>';\nreturn [{ json: { chat_id: e.chat_id, texto: t } }];"
+   }
+  },
+  {
+   "id": "b3bcd4c8-cdff-44a6-886e-1d27c82e2974",
+   "name": "Responder estado",
+   "type": "n8n-nodes-base.telegram",
+   "typeVersion": 1.2,
+   "position": [
+    2640,
+    200
+   ],
+   "parameters": {
+    "chatId": "={{ $json.chat_id }}",
+    "text": "={{ $json.texto }}",
+    "additionalFields": {
+     "appendAttribution": false,
+     "parse_mode": "HTML",
+     "disable_web_page_preview": true
+    }
+   },
+   "credentials": {
+    "telegramApi": {
+     "id": "__CRED_TG__",
+     "name": "Telegram GastoClaro"
+    }
+   }
+  },
+  {
+   "id": "26861380-0e78-4876-a755-b22acb5048b5",
+   "name": "Leer caso a decidir",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    2200,
+    400
+   ],
+   "parameters": {
+    "resource": "row",
+    "operation": "get",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "id",
+     "value": "__DT_casos__"
+    },
+    "matchType": "allConditions",
+    "filters": {
+     "conditions": [
+      {
+       "keyName": "caso_id",
+       "condition": "eq",
+       "keyValue": "={{ $json.caso_id }}"
+      }
+     ]
+    },
+    "returnAll": false,
+    "limit": 1
+   },
+   "alwaysOutputData": true
+  },
+  {
+   "id": "328b22fe-94bd-4fa1-b690-3d4ae507f9c2",
+   "name": "Validar decisión (servidor)",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    2420,
+    400
+   ],
+   "parameters": {
+    "jsCode": "const e = $('Autorizar y enrutar').first().json;\nconst c = $input.all().map(i => i.json).find(x => x.caso_id === e.caso_id);\nlet ok = false, motivo = '';\nif (!e.puedeAprobar) motivo = 'No tienes rol de aprobador.';\nelse if (!c) motivo = 'Folio inexistente.';\nelse if (c.estado !== 'pendiente_aprobacion') motivo = `El caso ya está en estado ${c.estado}.`;\nelse if (Number(c.version) !== Number(e.version)) motivo = `La versión ${e.version} ya no es la vigente (v${c.version}).`;\nelse if (c.aprobacion_expira && new Date(c.aprobacion_expira) < new Date()) motivo = 'La solicitud de aprobación expiró.';\nelse ok = true;\nconst aprobado = e.accion === 'ap';\nconst ahora = new Date().toISOString();\nreturn [{ json: { ok, motivo, row_id: c ? c.id : null, caso_id: e.caso_id, aprobado, chat_aprobador: e.chat_id, chat_solicitante: c ? c.chat_solicitante : '',\n  callback_id: e.callback_id, message_id: e.message_id, version: e.version, ahora,\n  nuevo_estado: aprobado ? 'aprobado_simulado' : 'rechazado_aprobador', decision: (aprobado ? 'aprobado' : 'rechazado') + ' por ' + e.alias + ' (v' + e.version + ')' } }];"
+   }
+  },
+  {
+   "id": "8fae7cee-1532-4da1-a4af-dd3c3e960c55",
+   "name": "¿Decisión válida?",
+   "type": "n8n-nodes-base.if",
+   "typeVersion": 2.2,
+   "position": [
+    2640,
+    400
+   ],
+   "parameters": {
+    "conditions": {
+     "options": {
+      "caseSensitive": true,
+      "leftValue": "",
+      "typeValidation": "loose",
+      "version": 2
+     },
+     "conditions": [
+      {
+       "id": "3d5dfed2-9429-4f64-bd06-4ccba98f5e1f",
+       "leftValue": "={{ $json.ok }}",
+       "rightValue": "",
+       "operator": {
+        "type": "boolean",
+        "operation": "true",
+        "singleValue": true
+       }
+      }
+     ],
+     "combinator": "and"
+    },
+    "options": {}
+   }
+  },
+  {
+   "id": "aa2410be-cb35-44d1-8d2e-cbbeb646cd2d",
+   "name": "Fila decisión",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    2860,
+    340
+   ],
+   "parameters": {
+    "jsCode": "const d=$input.first().json; return [{ json: { estado: d.nuevo_estado, decision: d.decision, decidido_en: d.ahora } }];"
+   }
+  },
+  {
+   "id": "9c94b726-c7c8-4ec3-9d0a-2725bb842da3",
+   "name": "Guardar decisión",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    3080,
+    340
+   ],
+   "parameters": {
+    "resource": "row",
+    "operation": "update",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "id",
+     "value": "__DT_casos__"
+    },
+    "matchType": "allConditions",
+    "filters": {
+     "conditions": [
+      {
+       "keyName": "id",
+       "condition": "eq",
+       "keyValue": "={{ $('Validar decisión (servidor)').first().json.row_id }}"
+      }
+     ]
+    },
+    "columns": {
+     "mappingMode": "autoMapInputData",
+     "value": {},
+     "matchingColumns": [],
+     "schema": []
+    },
+    "options": {}
+   }
+  },
+  {
+   "id": "08720302-2d68-4f00-b6fe-4a0e4a54fc2c",
+   "name": "Traza decisión",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    3300,
+    340
+   ],
+   "parameters": {
+    "jsCode": "const d = $('Validar decisión (servidor)').first().json;\nreturn [{ json: { caso_id: d.caso_id, paso: 99, rol: 'Aprobación humana', version: d.version, estado: d.nuevo_estado, skill: '', entrada: 'callback Telegram', salida: d.decision + ' · resultado simulado: no se emite orden de compra', tokens_in_est: 0, tokens_out_est: 0, costo_est_usd: 0, duracion_ms: 0, ejecucion_id: String($execution.id) } }];"
+   }
+  },
+  {
+   "id": "02980cc7-2f48-4d7b-bdb0-f49559fa893b",
+   "name": "Guardar traza decisión",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    3520,
+    340
+   ],
+   "parameters": {
+    "resource": "row",
+    "operation": "insert",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "id",
+     "value": "__DT_trazas__"
+    },
+    "columns": {
+     "mappingMode": "autoMapInputData",
+     "value": {},
+     "matchingColumns": [],
+     "schema": []
+    },
+    "options": {}
+   }
+  },
+  {
+   "id": "87ffeccd-1190-4b53-a29b-a22baaf5eb59",
+   "name": "Confirmar botón",
+   "type": "n8n-nodes-base.telegram",
+   "typeVersion": 1.2,
+   "position": [
+    3740,
+    340
+   ],
+   "parameters": {
+    "resource": "callback",
+    "queryId": "={{ $('Validar decisión (servidor)').first().json.callback_id }}",
+    "additionalFields": {
+     "text": "={{ $('Validar decisión (servidor)').first().json.aprobado ? 'Aprobado (simulado)' : 'Rechazado' }}"
+    }
+   },
+   "credentials": {
+    "telegramApi": {
+     "id": "__CRED_TG__",
+     "name": "Telegram GastoClaro"
+    }
+   },
+   "onError": "continueRegularOutput"
+  },
+  {
+   "id": "13c64044-0f9b-4636-ba13-2148afef6809",
+   "name": "Quitar botones",
+   "type": "n8n-nodes-base.telegram",
+   "typeVersion": 1.2,
+   "position": [
+    3960,
+    340
+   ],
+   "parameters": {
+    "resource": "message",
+    "operation": "editMessageText",
+    "chatId": "={{ $('Validar decisión (servidor)').first().json.chat_aprobador }}",
+    "messageId": "={{ $('Validar decisión (servidor)').first().json.message_id }}",
+    "replyMarkup": "none",
+    "text": "={{ '✔️ ' + $('Validar decisión (servidor)').first().json.caso_id + ': ' + $('Validar decisión (servidor)').first().json.decision + '. Resultado simulado: no se emitió orden de compra.' }}",
+    "additionalFields": {}
+   },
+   "credentials": {
+    "telegramApi": {
+     "id": "__CRED_TG__",
+     "name": "Telegram GastoClaro"
+    }
+   },
+   "onError": "continueRegularOutput"
+  },
+  {
+   "id": "300528a1-7589-4854-81b6-a9c7feccdd57",
+   "name": "Avisar al solicitante",
+   "type": "n8n-nodes-base.telegram",
+   "typeVersion": 1.2,
+   "position": [
+    4180,
+    340
+   ],
+   "parameters": {
+    "chatId": "={{ $('Validar decisión (servidor)').first().json.chat_solicitante }}",
+    "text": "={{ '📣 ' + $('Validar decisión (servidor)').first().json.caso_id + ': ' + $('Validar decisión (servidor)').first().json.decision + '. Resultado simulado.' }}",
+    "additionalFields": {
+     "appendAttribution": false,
+     "parse_mode": "HTML",
+     "disable_web_page_preview": true
+    }
+   },
+   "credentials": {
+    "telegramApi": {
+     "id": "__CRED_TG__",
+     "name": "Telegram GastoClaro"
+    }
+   },
+   "onError": "continueRegularOutput"
+  },
+  {
+   "id": "4b88b05f-a665-44be-91d2-802faa07c42e",
+   "name": "Rechazar botón",
+   "type": "n8n-nodes-base.telegram",
+   "typeVersion": 1.2,
+   "position": [
+    2860,
+    520
+   ],
+   "parameters": {
+    "resource": "callback",
+    "queryId": "={{ $json.callback_id }}",
+    "additionalFields": {
+     "text": "={{ $json.motivo }}",
+     "show_alert": true
+    }
+   },
+   "credentials": {
+    "telegramApi": {
+     "id": "__CRED_TG__",
+     "name": "Telegram GastoClaro"
+    }
+   },
+   "onError": "continueRegularOutput"
+  },
+  {
+   "id": "c6ef78c1-0d45-4fee-9e58-c6e4d58ddac6",
+   "name": "Ayuda",
+   "type": "n8n-nodes-base.telegram",
+   "typeVersion": 1.2,
+   "position": [
+    2200,
+    620
+   ],
+   "parameters": {
+    "chatId": "={{ $json.chat_id }}",
+    "text": "=<b>GastoClaro · Manufacturas del Valle</b> (empresa ficticia, modo SIMULADO)\n\n/nuevo <i>solicitud</i> – crea un caso. Incluye centro de costo (CC-###), concepto, cantidad, precio unitario MXN sin IVA, urgencia y justificación.\nEj.: /nuevo CC-110 20 rodamientos 6205-2RS a $190 c/u, urgencia alta, vibración en transportador de la línea 2\n\n/estado GAS-0001 – consulta un folio.\nAprobación: botones ✅/❌ (solo aprobadores, expiran en 24 h).",
+    "additionalFields": {
+     "appendAttribution": false,
+     "parse_mode": "HTML",
+     "disable_web_page_preview": true
+    }
+   },
+   "credentials": {
+    "telegramApi": {
+     "id": "__CRED_TG__",
+     "name": "Telegram GastoClaro"
+    }
+   }
+  },
+  {
+   "id": "dceaf0fa-02e4-4a5d-a8ed-808f73babe7a",
+   "name": "Sin permiso",
+   "type": "n8n-nodes-base.telegram",
+   "typeVersion": 1.2,
+   "position": [
+    2200,
+    760
+   ],
+   "parameters": {
+    "chatId": "={{ $json.chat_id }}",
+    "text": "=⛔ Este chat no está autorizado para GastoClaro. Pide acceso al administrador del piloto.",
+    "additionalFields": {
+     "appendAttribution": false,
+     "parse_mode": "HTML",
+     "disable_web_page_preview": true
+    }
+   },
+   "credentials": {
+    "telegramApi": {
+     "id": "__CRED_TG__",
+     "name": "Telegram GastoClaro"
+    }
+   },
+   "onError": "continueRegularOutput"
+  },
+  {
+   "id": "740a44e0-b9e0-493f-840e-731b1d1983bd",
+   "name": "Mensaje de corrección",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    2200,
+    900
+   ],
+   "parameters": {
+    "jsCode": "const e = $input.first().json;\nconst t = e.ruta === 'sin_texto' ? 'Solo proceso texto. Escribe tu solicitud con /nuevo (no fotos, audios ni stickers).'\n  : e.ruta === 'estado_sin_folio' ? 'Indica el folio, por ejemplo: /estado GAS-0001'\n  : e.tipo === 'decision' ? 'Botón no válido.' : 'No entendí el comando. Usa /nuevo, /estado GAS-0001 o /ayuda.';\nreturn [{ json: { chat_id: e.chat_id, texto: t } }];"
+   }
+  },
+  {
+   "id": "d28be7d6-e2f7-475a-b7f1-119244cdad16",
+   "name": "Responder corrección",
+   "type": "n8n-nodes-base.telegram",
+   "typeVersion": 1.2,
+   "position": [
+    2420,
+    900
+   ],
+   "parameters": {
+    "chatId": "={{ $json.chat_id }}",
+    "text": "={{ $json.texto }}",
+    "additionalFields": {
+     "appendAttribution": false,
+     "parse_mode": "HTML",
+     "disable_web_page_preview": true
+    }
+   },
+   "credentials": {
+    "telegramApi": {
+     "id": "__CRED_TG__",
+     "name": "Telegram GastoClaro"
+    }
+   }
+  }
+ ],
+ "connections": {
+  "Telegram Trigger": {
+   "main": [
+    [
+     {
+      "node": "Normalizar evento",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Normalizar evento": {
+   "main": [
+    [
+     {
+      "node": "Buscar evento (deduplicación)",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Buscar evento (deduplicación)": {
+   "main": [
+    [
+     {
+      "node": "¿Evento nuevo?",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "¿Evento nuevo?": {
+   "main": [
+    [
+     {
+      "node": "Nuevo evento",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Nuevo evento": {
+   "main": [
+    [
+     {
+      "node": "Fila evento",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Duplicado ignorado",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Fila evento": {
+   "main": [
+    [
+     {
+      "node": "Registrar evento",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Registrar evento": {
+   "main": [
+    [
+     {
+      "node": "Buscar usuario autorizado",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Buscar usuario autorizado": {
+   "main": [
+    [
+     {
+      "node": "Autorizar y enrutar",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Autorizar y enrutar": {
+   "main": [
+    [
+     {
+      "node": "Enrutar",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Enrutar": {
+   "main": [
+    [
+     {
+      "node": "Acuse de recibo",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Leer caso",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Leer caso a decidir",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Ayuda",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Sin permiso",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Mensaje de corrección",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Acuse de recibo": {
+   "main": [
+    [
+     {
+      "node": "Preparar caso",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Preparar caso": {
+   "main": [
+    [
+     {
+      "node": "Ejecutar orquestador",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Ejecutar orquestador": {
+   "main": [
+    [
+     {
+      "node": "Resultado al solicitante",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Leer caso": {
+   "main": [
+    [
+     {
+      "node": "Formatear estado",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Formatear estado": {
+   "main": [
+    [
+     {
+      "node": "Responder estado",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Leer caso a decidir": {
+   "main": [
+    [
+     {
+      "node": "Validar decisión (servidor)",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Validar decisión (servidor)": {
+   "main": [
+    [
+     {
+      "node": "¿Decisión válida?",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "¿Decisión válida?": {
+   "main": [
+    [
+     {
+      "node": "Fila decisión",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Rechazar botón",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Fila decisión": {
+   "main": [
+    [
+     {
+      "node": "Guardar decisión",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Guardar decisión": {
+   "main": [
+    [
+     {
+      "node": "Traza decisión",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Traza decisión": {
+   "main": [
+    [
+     {
+      "node": "Guardar traza decisión",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Guardar traza decisión": {
+   "main": [
+    [
+     {
+      "node": "Confirmar botón",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Confirmar botón": {
+   "main": [
+    [
+     {
+      "node": "Quitar botones",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Quitar botones": {
+   "main": [
+    [
+     {
+      "node": "Avisar al solicitante",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Mensaje de corrección": {
+   "main": [
+    [
+     {
+      "node": "Responder corrección",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  }
+ },
+ "settings": {
+  "executionOrder": "v1",
+  "timezone": "America/Mexico_City",
+  "callerPolicy": "workflowsFromSameOwner"
+ },
+ "active": false
+}

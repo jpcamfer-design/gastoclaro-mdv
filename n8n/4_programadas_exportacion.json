@@ -1,0 +1,373 @@
+{
+ "name": "GastoClaro · 4 Tarea programada y exportación",
+ "nodes": [
+  {
+   "id": "f05fbd31-bba4-4a4e-83c6-f8abc7487c9a",
+   "name": "Cada hora",
+   "type": "n8n-nodes-base.scheduleTrigger",
+   "typeVersion": 1.2,
+   "position": [
+    0,
+    200
+   ],
+   "parameters": {
+    "rule": {
+     "interval": [
+      {
+       "field": "hours",
+       "hoursInterval": 1
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "dd1fff65-65cc-40c7-bcf3-817e8bb1c271",
+   "name": "Casos pendientes",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    220,
+    200
+   ],
+   "parameters": {
+    "resource": "row",
+    "operation": "get",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "id",
+     "value": "__DT_casos__"
+    },
+    "matchType": "allConditions",
+    "filters": {
+     "conditions": [
+      {
+       "keyName": "estado",
+       "condition": "eq",
+       "keyValue": "pendiente_aprobacion"
+      }
+     ]
+    },
+    "returnAll": true
+   },
+   "alwaysOutputData": true
+  },
+  {
+   "id": "eab26e10-16ad-41cc-96cb-3021fcbf5d51",
+   "name": "Detectar vencidos",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    440,
+    200
+   ],
+   "parameters": {
+    "jsCode": "const ahora = new Date();\nreturn $input.all().map(i => i.json).filter(c => c.caso_id && c.aprobacion_expira && new Date(c.aprobacion_expira) < ahora)\n  .map(c => ({ json: { row_id: c.id, caso_id: c.caso_id, chat_solicitante: c.chat_solicitante } }));"
+   }
+  },
+  {
+   "id": "28785d6a-ada4-43fd-92c7-ed2d9bc2de3f",
+   "name": "Fila vencido",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    660,
+    200
+   ],
+   "parameters": {
+    "jsCode": "return $input.all().map(i => ({ json: { estado: 'expirado', decision: 'expiró sin aprobación (24 h)', decidido_en: new Date().toISOString() } }));"
+   }
+  },
+  {
+   "id": "b1a1a9ce-8335-4fa2-bae7-ccfbbd5ca39d",
+   "name": "Marcar expirado",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    880,
+    200
+   ],
+   "parameters": {
+    "resource": "row",
+    "operation": "update",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "id",
+     "value": "__DT_casos__"
+    },
+    "matchType": "allConditions",
+    "filters": {
+     "conditions": [
+      {
+       "keyName": "id",
+       "condition": "eq",
+       "keyValue": "={{ $('Detectar vencidos').item.json.row_id }}"
+      }
+     ]
+    },
+    "columns": {
+     "mappingMode": "autoMapInputData",
+     "value": {},
+     "matchingColumns": [],
+     "schema": []
+    },
+    "options": {}
+   }
+  },
+  {
+   "id": "e84189e1-7d8b-44f7-bade-510071078bf1",
+   "name": "Webhook exportación",
+   "type": "n8n-nodes-base.webhook",
+   "typeVersion": 2,
+   "position": [
+    0,
+    500
+   ],
+   "parameters": {
+    "httpMethod": "GET",
+    "path": "gastoclaro-export",
+    "authentication": "headerAuth",
+    "responseMode": "responseNode",
+    "options": {}
+   },
+   "credentials": {
+    "httpHeaderAuth": {
+     "id": "__CRED_EXP__",
+     "name": "GastoClaro export (header)"
+    }
+   },
+   "webhookId": "8016f0c6-6819-4314-82b1-5c5dc728921a"
+  },
+  {
+   "id": "0d7eac72-dd56-415a-84ad-0bf29fdab73a",
+   "name": "Todos los casos",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    220,
+    500
+   ],
+   "parameters": {
+    "resource": "row",
+    "operation": "get",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "id",
+     "value": "__DT_casos__"
+    },
+    "matchType": "allConditions",
+    "filters": {
+     "conditions": [
+      {
+       "keyName": "id",
+       "condition": "gt",
+       "keyValue": "0"
+      }
+     ]
+    },
+    "returnAll": true
+   },
+   "alwaysOutputData": true
+  },
+  {
+   "id": "7bf5de65-4c40-4c4b-b1a5-f59beeb90d53",
+   "name": "Todas las trazas",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    440,
+    500
+   ],
+   "parameters": {
+    "resource": "row",
+    "operation": "get",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "id",
+     "value": "__DT_trazas__"
+    },
+    "matchType": "allConditions",
+    "filters": {
+     "conditions": [
+      {
+       "keyName": "paso",
+       "condition": "gte",
+       "keyValue": "0"
+      }
+     ]
+    },
+    "returnAll": true
+   },
+   "alwaysOutputData": true,
+   "executeOnce": true
+  },
+  {
+   "id": "29fb4eff-87cb-4b06-bce3-eebbe26d9749",
+   "name": "Presupuesto vigente",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    660,
+    500
+   ],
+   "parameters": {
+    "resource": "row",
+    "operation": "get",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "id",
+     "value": "__DT_presupuesto__"
+    },
+    "matchType": "allConditions",
+    "filters": {
+     "conditions": [
+      {
+       "keyName": "presupuesto_mensual",
+       "condition": "gt",
+       "keyValue": "0"
+      }
+     ]
+    },
+    "returnAll": true
+   },
+   "alwaysOutputData": true,
+   "executeOnce": true
+  },
+  {
+   "id": "4e88fbdb-50dd-40f2-a83e-ca0a932c013c",
+   "name": "Exportación sanitizada",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    880,
+    500
+   ],
+   "parameters": {
+    "jsCode": "// Solo datos ficticios agregados o sin identificadores: sin chat_id, alias, ejecuciones ni textos libres largos.\nconst mask = s => String(s || '').replace(/[\\w.+-]+@[\\w-]+\\.[\\w.]+/g, '[correo]').replace(/\\d{7,}/g, '[num]').slice(0, 90);\nconst casos = $('Todos los casos').all().map(i => i.json).filter(c => c.caso_id).map(c => ({\n  caso_id: c.caso_id, canal: c.canal, estado: c.estado, version: c.version, centro_costo: c.centro_costo, concepto: mask(c.concepto), item_id: c.item_id,\n  cantidad: c.cantidad, precio_unitario: c.precio_unitario, precio_ref: c.precio_ref, variacion_precio: c.variacion_precio, monto_total: c.monto_total,\n  disponible_despues: c.disponible_despues, urgencia: c.urgencia, recomendacion: c.recomendacion, veredicto: c.veredicto, iteraciones: c.iteraciones,\n  decision: c.decision ? c.decision.replace(/ por .*\\(/, ' (') : '', creado: c.createdAt, decidido_en: c.decidido_en || null,\n  llamadas_llm: c.llamadas_llm, tokens_in_est: c.tokens_in_est, tokens_out_est: c.tokens_out_est, costo_est_usd: c.costo_est_usd }));\nconst trazas = $('Todas las trazas').all().map(i => i.json).filter(t => t.caso_id).map(t => ({ caso_id: t.caso_id, paso: t.paso, rol: t.rol, version: t.version, estado: t.estado, skill: t.skill,\n  tokens_in_est: t.tokens_in_est, tokens_out_est: t.tokens_out_est, costo_est_usd: t.costo_est_usd, ts: t.createdAt }));\nconst presupuesto = $('Presupuesto vigente').all().map(i => i.json).filter(p => p.centro_costo).map(p => ({ centro_costo: p.centro_costo, nombre: p.nombre, presupuesto_mensual: p.presupuesto_mensual, comprometido: p.comprometido, periodo: p.periodo }));\nreturn [{ json: { generado: new Date().toISOString(), fuente: 'n8n Data Tables mdv_casos/mdv_trazas (exportación sanitizada)', modo: 'SIMULADO', ficticio: true, casos, trazas, presupuesto } }];"
+   },
+   "executeOnce": true
+  },
+  {
+   "id": "ed04fb58-4d58-4be6-a9b6-cae3909d6bcc",
+   "name": "Responder exportación",
+   "type": "n8n-nodes-base.respondToWebhook",
+   "typeVersion": 1.1,
+   "position": [
+    1100,
+    500
+   ],
+   "parameters": {
+    "respondWith": "json",
+    "responseBody": "={{ JSON.stringify($json) }}",
+    "options": {}
+   }
+  }
+ ],
+ "connections": {
+  "Cada hora": {
+   "main": [
+    [
+     {
+      "node": "Casos pendientes",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Casos pendientes": {
+   "main": [
+    [
+     {
+      "node": "Detectar vencidos",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Detectar vencidos": {
+   "main": [
+    [
+     {
+      "node": "Fila vencido",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Fila vencido": {
+   "main": [
+    [
+     {
+      "node": "Marcar expirado",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Webhook exportación": {
+   "main": [
+    [
+     {
+      "node": "Todos los casos",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Todos los casos": {
+   "main": [
+    [
+     {
+      "node": "Todas las trazas",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Todas las trazas": {
+   "main": [
+    [
+     {
+      "node": "Presupuesto vigente",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Presupuesto vigente": {
+   "main": [
+    [
+     {
+      "node": "Exportación sanitizada",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Exportación sanitizada": {
+   "main": [
+    [
+     {
+      "node": "Responder exportación",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  }
+ },
+ "settings": {
+  "executionOrder": "v1",
+  "timezone": "America/Mexico_City",
+  "callerPolicy": "workflowsFromSameOwner"
+ },
+ "active": false
+}

@@ -1,0 +1,348 @@
+{
+ "name": "GastoClaro · 3 Voz ElevenLabs (webhook)",
+ "nodes": [
+  {
+   "id": "004f9d23-7b1b-4359-8147-f72e8e578cf2",
+   "name": "Webhook voz",
+   "type": "n8n-nodes-base.webhook",
+   "typeVersion": 2,
+   "position": [
+    0,
+    300
+   ],
+   "parameters": {
+    "httpMethod": "POST",
+    "path": "gastoclaro-voz",
+    "authentication": "headerAuth",
+    "responseMode": "responseNode",
+    "options": {}
+   },
+   "credentials": {
+    "httpHeaderAuth": {
+     "id": "__CRED_VOZ__",
+     "name": "GastoClaro voz (header)"
+    }
+   },
+   "webhookId": "ea8d4b7e-10a3-4bb3-9566-e89f863f4445"
+  },
+  {
+   "id": "7de71b23-8d25-4dc8-9e50-487477e0ca9a",
+   "name": "Validar petición de voz",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    220,
+    300
+   ],
+   "parameters": {
+    "jsCode": "const b = $input.first().json.body || {};\nconst accion = String(b.accion || '').toLowerCase();\nconst folioRaw = String(b.caso_id || b.folio || '').toUpperCase().replace(/\\s/g, '');\nconst m = folioRaw.match(/GAS-?(\\d{1,4})/);\nconst caso_id = m ? 'GAS-' + m[1].padStart(4, '0') : '';\nconst texto = String(b.solicitud || '').slice(0, 900);\nlet ruta = 'invalido', error = '';\nif (accion === 'consultar') { ruta = caso_id ? 'consultar' : 'invalido'; error = caso_id ? '' : 'Falta un folio con formato GAS-0001.'; }\nelse if (accion === 'crear') { ruta = texto.length >= 12 ? 'crear' : 'invalido'; error = ruta === 'crear' ? '' : 'La solicitud es muy corta; pide centro de costo, concepto, cantidad, precio y justificación.'; }\nelse error = 'Acción no permitida. Solo consultar o crear.';\nreturn [{ json: { ruta, caso_id, texto, error } }];"
+   }
+  },
+  {
+   "id": "1e1c1ae6-d2be-463c-8874-7ed5ac0afd9e",
+   "name": "Ruta voz",
+   "type": "n8n-nodes-base.switch",
+   "typeVersion": 3.2,
+   "position": [
+    440,
+    300
+   ],
+   "parameters": {
+    "rules": {
+     "values": [
+      {
+       "conditions": {
+        "options": {
+         "caseSensitive": true,
+         "typeValidation": "strict",
+         "version": 2
+        },
+        "combinator": "and",
+        "conditions": [
+         {
+          "id": "415a6986-d378-4498-8b9e-0550be7a4a6e",
+          "leftValue": "={{ $json.ruta }}",
+          "rightValue": "consultar",
+          "operator": {
+           "type": "string",
+           "operation": "equals"
+          }
+         }
+        ]
+       },
+       "renameOutput": true,
+       "outputKey": "consultar"
+      },
+      {
+       "conditions": {
+        "options": {
+         "caseSensitive": true,
+         "typeValidation": "strict",
+         "version": 2
+        },
+        "combinator": "and",
+        "conditions": [
+         {
+          "id": "acce1594-2bcc-4553-8514-c053a746df45",
+          "leftValue": "={{ $json.ruta }}",
+          "rightValue": "crear",
+          "operator": {
+           "type": "string",
+           "operation": "equals"
+          }
+         }
+        ]
+       },
+       "renameOutput": true,
+       "outputKey": "crear"
+      }
+     ]
+    },
+    "options": {
+     "fallbackOutput": "extra",
+     "renameFallbackOutput": "invalido"
+    }
+   }
+  },
+  {
+   "id": "bf6d276c-677c-40a6-9a4b-86d0029698e0",
+   "name": "Consultar caso",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    660,
+    160
+   ],
+   "parameters": {
+    "resource": "row",
+    "operation": "get",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "id",
+     "value": "__DT_casos__"
+    },
+    "matchType": "allConditions",
+    "filters": {
+     "conditions": [
+      {
+       "keyName": "caso_id",
+       "condition": "eq",
+       "keyValue": "={{ $json.caso_id }}"
+      }
+     ]
+    },
+    "returnAll": false,
+    "limit": 1
+   },
+   "alwaysOutputData": true
+  },
+  {
+   "id": "733c45c8-6431-4dd2-b53d-14dff55ca5f7",
+   "name": "Respuesta consulta",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    880,
+    160
+   ],
+   "parameters": {
+    "jsCode": "const id = $('Validar petición de voz').first().json.caso_id;\nconst c = $input.all().map(i => i.json).find(x => x.caso_id === id);\nif (!c) return [{ json: { encontrado: false, caso_id: id, mensaje: `No existe el folio ${id} en el registro. No inventes un estado.` } }];\nreturn [{ json: { encontrado: true, caso_id: c.caso_id, estado: c.estado, centro_costo: c.centro_costo, concepto: c.concepto, monto_total_mxn: c.monto_total,\n  recomendacion: c.recomendacion, revision: c.veredicto, version: c.version, decision: c.decision || 'sin decisión', actualizado: c.updatedAt, resultado: 'simulado' } }];"
+   }
+  },
+  {
+   "id": "b1ec676d-b0ec-4ec1-b203-0e6e4453c476",
+   "name": "Preparar caso de voz",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    660,
+    320
+   ],
+   "parameters": {
+    "jsCode": "const v=$input.first().json; return [{ json: { canal:'voz', chat_id:'', usuario:'voz-publica', texto: v.texto } }];"
+   }
+  },
+  {
+   "id": "478565a3-5c56-4500-a34f-f1c1a4af19de",
+   "name": "Ejecutar orquestador (voz)",
+   "type": "n8n-nodes-base.executeWorkflow",
+   "typeVersion": 1.2,
+   "position": [
+    880,
+    320
+   ],
+   "parameters": {
+    "workflowId": {
+     "__rl": true,
+     "mode": "id",
+     "value": "__WF_ORQ__"
+    },
+    "options": {
+     "waitForSubWorkflow": true
+    }
+   }
+  },
+  {
+   "id": "93d6117d-c3c0-4159-a9c5-0ea89e9b642e",
+   "name": "Respuesta creación",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    1100,
+    320
+   ],
+   "parameters": {
+    "jsCode": "const r = $input.first().json;\nconst limpio = String(r.mensaje_solicitante || '').replace(/<[^>]+>/g, '');\nreturn [{ json: { creado: true, caso_id: r.caso_id, estado: r.estado, monto_total_mxn: r.monto_total, recomendacion: r.recomendacion, faltantes: r.faltantes, resumen: limpio.slice(0, 700), resultado: 'simulado' } }];"
+   }
+  },
+  {
+   "id": "8dda61a6-bd25-4360-91aa-64ee2d4f6dbc",
+   "name": "Respuesta inválida",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    660,
+    480
+   ],
+   "parameters": {
+    "jsCode": "const v=$input.first().json; return [{ json: { error: true, mensaje: v.error } }];"
+   }
+  },
+  {
+   "id": "ba5e030a-0636-4480-8830-2d434389299e",
+   "name": "Responder a ElevenLabs",
+   "type": "n8n-nodes-base.respondToWebhook",
+   "typeVersion": 1.1,
+   "position": [
+    1320,
+    300
+   ],
+   "parameters": {
+    "respondWith": "json",
+    "responseBody": "={{ JSON.stringify($json) }}",
+    "options": {}
+   }
+  }
+ ],
+ "connections": {
+  "Webhook voz": {
+   "main": [
+    [
+     {
+      "node": "Validar petición de voz",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Validar petición de voz": {
+   "main": [
+    [
+     {
+      "node": "Ruta voz",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Ruta voz": {
+   "main": [
+    [
+     {
+      "node": "Consultar caso",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Preparar caso de voz",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Respuesta inválida",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Consultar caso": {
+   "main": [
+    [
+     {
+      "node": "Respuesta consulta",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Respuesta consulta": {
+   "main": [
+    [
+     {
+      "node": "Responder a ElevenLabs",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Preparar caso de voz": {
+   "main": [
+    [
+     {
+      "node": "Ejecutar orquestador (voz)",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Ejecutar orquestador (voz)": {
+   "main": [
+    [
+     {
+      "node": "Respuesta creación",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Respuesta creación": {
+   "main": [
+    [
+     {
+      "node": "Responder a ElevenLabs",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Respuesta inválida": {
+   "main": [
+    [
+     {
+      "node": "Responder a ElevenLabs",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  }
+ },
+ "settings": {
+  "executionOrder": "v1",
+  "timezone": "America/Mexico_City",
+  "callerPolicy": "workflowsFromSameOwner"
+ },
+ "active": false
+}
