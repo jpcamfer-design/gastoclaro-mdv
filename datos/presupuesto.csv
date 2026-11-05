@@ -1,0 +1,8 @@
+centro_costo,nombre,presupuesto_mensual_mxn,comprometido_mxn,periodo
+CC-110,Mantenimiento mecánico,480000,312400,2026-11
+CC-120,Mantenimiento eléctrico,260000,171900,2026-11
+CC-210,Producción línea 1,350000,298700,2026-11
+CC-220,Producción línea 2,350000,141250,2026-11
+CC-310,Calidad y metrología,180000,96300,2026-11
+CC-410,Seguridad e higiene (EHS),150000,138900,2026-11
+CC-510,Almacén y logística,120000,64800,2026-11

@@ -1,0 +1,15 @@
+{
+  "version": "POL-2026.11",
+  "moneda": "MXN",
+  "nota": "Políticas ficticias de Manufacturas del Valle. Montos sin IVA.",
+  "reglas": [
+    {"id": "POL-01", "nombre": "Disponible presupuestal", "tipo": "bloqueo", "regla": "monto_total <= disponible del centro de costo"},
+    {"id": "POL-02", "nombre": "Cotizaciones", "tipo": "devolucion", "regla": "si monto_total > 50000 se requieren al menos 2 cotizaciones"},
+    {"id": "POL-03", "nombre": "Precio de referencia", "tipo": "devolucion", "regla": "si existe ítem de catálogo, precio_unitario <= 1.15 x precio_ref; si excede se requiere justificación de precio"},
+    {"id": "POL-04", "nombre": "Categoría restringida", "tipo": "bloqueo", "regla": "no se aceptan mobiliario de oficina, obsequios, viajes ni software por este canal"},
+    {"id": "POL-05", "nombre": "Facultad de aprobación", "tipo": "escalamiento", "regla": "el Budget Owner aprueba hasta 150000; montos mayores se escalan a Gerencia de Planta (simulado)"},
+    {"id": "POL-06", "nombre": "Urgencia crítica", "tipo": "devolucion", "regla": "urgencia critica requiere justificación con impacto en producción o seguridad"}
+  ],
+  "umbrales": {"cotizaciones_desde": 50000, "tolerancia_precio": 0.15, "facultad_budget_owner": 150000},
+  "categorias_restringidas": ["mobiliario de oficina", "obsequios", "viajes", "software"]
+}
