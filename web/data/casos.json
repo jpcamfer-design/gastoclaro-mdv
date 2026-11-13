@@ -1,0 +1,59 @@
+{
+ "generado": "2026-11-05T01:49:06.786957Z",
+ "fuente": "instantánea inicial (sin casos)",
+ "modo": "SIMULADO",
+ "ficticio": true,
+ "casos": [],
+ "trazas": [],
+ "presupuesto": [
+  {
+   "centro_costo": "CC-110",
+   "nombre": "Mantenimiento mecánico",
+   "presupuesto_mensual": 480000,
+   "comprometido": 312400,
+   "periodo": "2026-11"
+  },
+  {
+   "centro_costo": "CC-120",
+   "nombre": "Mantenimiento eléctrico",
+   "presupuesto_mensual": 260000,
+   "comprometido": 171900,
+   "periodo": "2026-11"
+  },
+  {
+   "centro_costo": "CC-210",
+   "nombre": "Producción línea 1",
+   "presupuesto_mensual": 350000,
+   "comprometido": 298700,
+   "periodo": "2026-11"
+  },
+  {
+   "centro_costo": "CC-220",
+   "nombre": "Producción línea 2",
+   "presupuesto_mensual": 350000,
+   "comprometido": 141250,
+   "periodo": "2026-11"
+  },
+  {
+   "centro_costo": "CC-310",
+   "nombre": "Calidad y metrología",
+   "presupuesto_mensual": 180000,
+   "comprometido": 96300,
+   "periodo": "2026-11"
+  },
+  {
+   "centro_costo": "CC-410",
+   "nombre": "Seguridad e higiene (EHS)",
+   "presupuesto_mensual": 150000,
+   "comprometido": 138900,
+   "periodo": "2026-11"
+  },
+  {
+   "centro_costo": "CC-510",
+   "nombre": "Almacén y logística",
+   "presupuesto_mensual": 120000,
+   "comprometido": 64800,
+   "periodo": "2026-11"
+  }
+ ]
+}
