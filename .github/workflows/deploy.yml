@@ -1,0 +1,64 @@
+name: Validar y publicar panel
+
+# Se ejecuta al cambiar el sitio/datos en main, manualmente y cada 6 h para refrescar la exportación sanitizada.
+on:
+  push:
+    branches: [main]
+    paths: ["web/**", "datos/**", "skills/**", "loops/**", "scripts/validate.py", ".github/workflows/deploy.yml"]
+  workflow_dispatch:
+  schedule:
+    - cron: "17 */6 * * *"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  validar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Actualizar datos desde la exportación sanitizada de n8n
+        env:
+          EXPORT_URL: ${{ secrets.N8N_EXPORT_URL }}
+          EXPORT_KEY: ${{ secrets.N8N_EXPORT_KEY }}
+        run: |
+          if [ -z "$EXPORT_URL" ] || [ -z "$EXPORT_KEY" ]; then
+            echo "::notice::Sin secretos de exportación; se publica la instantánea del repositorio."
+            exit 0
+          fi
+          if curl -fsS --max-time 30 -H "X-GastoClaro-Key: $EXPORT_KEY" "$EXPORT_URL" -o /tmp/casos.json; then
+            python3 -c "import json;d=json.load(open('/tmp/casos.json'));print('casos exportados:',len(d['casos']))"
+            cp /tmp/casos.json web/data/casos.json
+          else
+            echo "::warning::n8n no respondió; se publica la instantánea previa (el panel la marcará como desactualizada si pasa de 48 h)."
+          fi
+
+      - name: Controles previos (esquema, cálculos, secretos, skills)
+        run: python3 scripts/validate.py
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+
+  publicar:
+    needs: validar
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
