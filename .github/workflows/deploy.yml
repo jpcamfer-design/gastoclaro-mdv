@@ -4,13 +4,13 @@ name: Validar y publicar panel
 on:
   push:
     branches: [main]
-    paths: ["web/**", "datos/**", "skills/**", "loops/**", "scripts/validate.py", ".github/workflows/deploy.yml"]
+    paths: ["web/**", "tests/**", "datos/**", "skills/**", "loops/**", "scripts/validate.py", ".github/workflows/deploy.yml"]
   workflow_dispatch:
   schedule:
     - cron: "17 */6 * * *"
 
 permissions:
-  contents: read
+  contents: write   # para guardar la instantánea validada en el repo
   pages: write
   id-token: write
 
@@ -44,8 +44,24 @@ jobs:
             echo "::warning::n8n no respondió; se publica la instantánea previa (el panel la marcará como desactualizada si pasa de 48 h)."
           fi
 
+      - name: Prueba negativa del validador (debe rechazar datos incorrectos)
+        run: |
+          if python3 scripts/validate.py tests/casos_invalidos.json; then
+            echo "::error::El validador aceptó datos inválidos"; exit 1
+          fi
+          echo "OK: el validador bloqueó tests/casos_invalidos.json"
+
       - name: Controles previos (esquema, cálculos, secretos, skills)
         run: python3 scripts/validate.py
+
+      - name: Guardar instantánea validada en el repo (respaldo si n8n deja de responder)
+        if: github.event_name != 'pull_request'
+        run: |
+          git config user.name "gastoclaro-bot"
+          git config user.email "gastoclaro-bot@users.noreply.github.com"
+          git add web/data/casos.json
+          if git diff --cached --quiet; then echo "Sin cambios en la instantánea"; else
+            git commit -m "Instantánea validada del panel [skip ci]" && git push; fi
 
       - uses: actions/configure-pages@v5
 
