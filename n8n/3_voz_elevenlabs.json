@@ -2,7 +2,7 @@
  "name": "GastoClaro · 3 Voz ElevenLabs (webhook)",
  "nodes": [
   {
-   "id": "004f9d23-7b1b-4359-8147-f72e8e578cf2",
+   "id": "0818a40f-af63-4c3a-b8fe-e35f07644a8d",
    "name": "Webhook voz",
    "type": "n8n-nodes-base.webhook",
    "typeVersion": 2,
@@ -23,10 +23,10 @@
      "name": "GastoClaro voz (header)"
     }
    },
-   "webhookId": "ea8d4b7e-10a3-4bb3-9566-e89f863f4445"
+   "webhookId": "55c294db-d1e1-4088-92ad-aeb29ccf71d7"
   },
   {
-   "id": "7de71b23-8d25-4dc8-9e50-487477e0ca9a",
+   "id": "5b0b4bca-0649-4bf9-b3e6-e798b00724a8",
    "name": "Validar petición de voz",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -39,7 +39,7 @@
    }
   },
   {
-   "id": "1e1c1ae6-d2be-463c-8874-7ed5ac0afd9e",
+   "id": "1f0c3ad0-9e7b-4f2a-b548-65a69c45ca5d",
    "name": "Ruta voz",
    "type": "n8n-nodes-base.switch",
    "typeVersion": 3.2,
@@ -60,7 +60,7 @@
         "combinator": "and",
         "conditions": [
          {
-          "id": "415a6986-d378-4498-8b9e-0550be7a4a6e",
+          "id": "37ac34cf-f94c-46a2-a604-eb0981141712",
           "leftValue": "={{ $json.ruta }}",
           "rightValue": "consultar",
           "operator": {
@@ -83,7 +83,7 @@
         "combinator": "and",
         "conditions": [
          {
-          "id": "acce1594-2bcc-4553-8514-c053a746df45",
+          "id": "cca10214-34ad-4f44-85ed-86bf303ece49",
           "leftValue": "={{ $json.ruta }}",
           "rightValue": "crear",
           "operator": {
@@ -105,7 +105,7 @@
    }
   },
   {
-   "id": "bf6d276c-677c-40a6-9a4b-86d0029698e0",
+   "id": "deedaf29-1005-422f-bc45-8a6ca9c0b837",
    "name": "Consultar caso",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -137,7 +137,39 @@
    "alwaysOutputData": true
   },
   {
-   "id": "733c45c8-6431-4dd2-b53d-14dff55ca5f7",
+   "id": "6c8d4e35-90c8-4acf-98b9-66928bfb3827",
+   "name": "Trazas del caso",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    770,
+    60
+   ],
+   "parameters": {
+    "resource": "row",
+    "operation": "get",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "id",
+     "value": "__DT_trazas__"
+    },
+    "matchType": "allConditions",
+    "filters": {
+     "conditions": [
+      {
+       "keyName": "caso_id",
+       "condition": "eq",
+       "keyValue": "={{ $('Validar petición de voz').first().json.caso_id }}"
+      }
+     ]
+    },
+    "returnAll": true
+   },
+   "alwaysOutputData": true,
+   "executeOnce": true
+  },
+  {
+   "id": "153165d0-36aa-4018-8ef3-8339b658ac1b",
    "name": "Respuesta consulta",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -146,11 +178,11 @@
     160
    ],
    "parameters": {
-    "jsCode": "const id = $('Validar petición de voz').first().json.caso_id;\nconst c = $input.all().map(i => i.json).find(x => x.caso_id === id);\nif (!c) return [{ json: { encontrado: false, caso_id: id, mensaje: `No existe el folio ${id} en el registro. No inventes un estado.` } }];\nreturn [{ json: { encontrado: true, caso_id: c.caso_id, estado: c.estado, centro_costo: c.centro_costo, concepto: c.concepto, monto_total_mxn: c.monto_total,\n  recomendacion: c.recomendacion, revision: c.veredicto, version: c.version, decision: c.decision || 'sin decisión', actualizado: c.updatedAt, resultado: 'simulado' } }];"
+    "jsCode": "const id = $('Validar petición de voz').first().json.caso_id;\nconst c = $('Consultar caso').all().map(i => i.json).find(x => x.caso_id === id);\nconst tr = $input.all().map(i => i.json).filter(t => t.caso_id === id && !['presupuesto_ok', 'llm_ok'].includes(t.estado)).sort((a, b) => a.paso - b.paso)\n  .map(t => `${t.paso}. ${t.rol}${t.version ? ' v' + t.version : ''}: ${t.estado.replace(/_/g, ' ')}`);\nif (!c) return [{ json: { encontrado: false, caso_id: id, mensaje: `No existe el folio ${id} en el registro. No inventes un estado.` } }];\nreturn [{ json: { encontrado: true, caso_id: c.caso_id, estado: c.estado, centro_costo: c.centro_costo, concepto: c.concepto, monto_total_mxn: c.monto_total,\n  recomendacion: c.recomendacion, revision: c.veredicto, version: c.version, decision: (c.decision || 'sin decisión').replace(/ por .*\\(/, ' ('), actualizado: c.updatedAt,\n  politicas_con_falla: JSON.parse(c.politicas || '[]').filter(p => !p.ok).map(p => p.id), recorrido_auditoria: tr.slice(0, 18), resultado: 'simulado' } }];"
    }
   },
   {
-   "id": "b1ec676d-b0ec-4ec1-b203-0e6e4453c476",
+   "id": "d081ca32-dcca-4f8a-bdb4-418bafd2d6da",
    "name": "Preparar caso de voz",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -163,7 +195,7 @@
    }
   },
   {
-   "id": "478565a3-5c56-4500-a34f-f1c1a4af19de",
+   "id": "2e901964-392e-4902-aead-ca6bce402089",
    "name": "Ejecutar orquestador (voz)",
    "type": "n8n-nodes-base.executeWorkflow",
    "typeVersion": 1.2,
@@ -183,7 +215,7 @@
    }
   },
   {
-   "id": "93d6117d-c3c0-4159-a9c5-0ea89e9b642e",
+   "id": "fe52467c-61c9-474a-b3d1-09d421ed1420",
    "name": "Respuesta creación",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -196,7 +228,7 @@
    }
   },
   {
-   "id": "8dda61a6-bd25-4360-91aa-64ee2d4f6dbc",
+   "id": "ca2cc233-5687-428e-ad7b-660a4907ed71",
    "name": "Respuesta inválida",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -209,7 +241,7 @@
    }
   },
   {
-   "id": "ba5e030a-0636-4480-8830-2d434389299e",
+   "id": "acd82d2e-74e9-489a-97a6-2312be34144f",
    "name": "Responder a ElevenLabs",
    "type": "n8n-nodes-base.respondToWebhook",
    "typeVersion": 1.1,
@@ -273,6 +305,17 @@
    ]
   },
   "Consultar caso": {
+   "main": [
+    [
+     {
+      "node": "Trazas del caso",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Trazas del caso": {
    "main": [
     [
      {

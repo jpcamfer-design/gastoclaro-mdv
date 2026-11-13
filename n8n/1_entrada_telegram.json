@@ -2,7 +2,7 @@
  "name": "GastoClaro · 1 Entrada Telegram",
  "nodes": [
   {
-   "id": "52ca21e7-d64f-4d06-8eee-de53a4fc9860",
+   "id": "8d0a4a17-35b6-4622-86a2-a087bc04d50f",
    "name": "Telegram Trigger",
    "type": "n8n-nodes-base.telegramTrigger",
    "typeVersion": 1.2,
@@ -23,10 +23,10 @@
      "name": "Telegram GastoClaro"
     }
    },
-   "webhookId": "04428244-bb9e-45c3-8c25-aea685adb4da"
+   "webhookId": "6c119ea2-3be5-4a75-8e84-341d1c6d6ffa"
   },
   {
-   "id": "e66c38de-76c7-41b9-bde7-28688b14796c",
+   "id": "7a17bd74-b0b0-4ae6-ae03-19e0367664af",
    "name": "Normalizar evento",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -39,7 +39,7 @@
    }
   },
   {
-   "id": "583ba68b-6c82-4507-8895-3f7e401b3541",
+   "id": "c0f89c93-a16a-4853-991e-e2c3fb9c7eeb",
    "name": "Buscar evento (deduplicación)",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -71,7 +71,7 @@
    "alwaysOutputData": true
   },
   {
-   "id": "dc99ae7a-576b-4d07-a074-1a5a4f2c5fb9",
+   "id": "a952989c-28dd-4fe6-9492-7acbd04c8756",
    "name": "¿Evento nuevo?",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -84,7 +84,7 @@
    }
   },
   {
-   "id": "62635f2d-63b5-40c5-bb54-7336229ffbc6",
+   "id": "7f2c05f5-c237-4112-8c84-290d47182106",
    "name": "Nuevo evento",
    "type": "n8n-nodes-base.if",
    "typeVersion": 2.2,
@@ -102,7 +102,7 @@
      },
      "conditions": [
       {
-       "id": "3454e981-e620-430e-8ce5-1066cb2e0729",
+       "id": "4ca7ab96-7b25-460f-8ef4-fcec40f12f46",
        "leftValue": "={{ !$json.duplicado }}",
        "rightValue": "",
        "operator": {
@@ -118,7 +118,7 @@
    }
   },
   {
-   "id": "9e72caaa-b4e1-4ce0-8811-1b4a6ae4dff8",
+   "id": "6a618d4e-be7d-45f5-b49f-adc11de1ebd6",
    "name": "Fila evento",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -131,7 +131,7 @@
    }
   },
   {
-   "id": "93b93673-84ca-4c7b-99ab-b46e3f4c474b",
+   "id": "9ebc3603-b847-4220-94de-b395fa6b3551",
    "name": "Registrar evento",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -157,7 +157,7 @@
    }
   },
   {
-   "id": "0b1ac60d-63e1-427c-9ef9-83e8aea3c380",
+   "id": "a010ae37-c48c-4e40-8e1a-9e9371be530b",
    "name": "Buscar usuario autorizado",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -189,7 +189,7 @@
    "alwaysOutputData": true
   },
   {
-   "id": "3296381f-61f4-4905-9bd0-bfd6390b3a7c",
+   "id": "b4bcff52-9581-49ef-a0ea-ccd956f77a66",
    "name": "Autorizar y enrutar",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -202,7 +202,7 @@
    }
   },
   {
-   "id": "c632e898-6730-4597-bdf0-769654462c83",
+   "id": "2d78377a-4146-44b7-ac07-b32844549fad",
    "name": "Enrutar",
    "type": "n8n-nodes-base.switch",
    "typeVersion": 3.2,
@@ -223,7 +223,7 @@
         "combinator": "and",
         "conditions": [
          {
-          "id": "fe02e7b0-b684-4cf1-bf18-e43e8ccd113c",
+          "id": "0141d215-bf85-47f6-8bb4-bfa9dab51c1a",
           "leftValue": "={{ $json.ruta }}",
           "rightValue": "nuevo",
           "operator": {
@@ -246,7 +246,7 @@
         "combinator": "and",
         "conditions": [
          {
-          "id": "dd4486e1-8873-4aea-b918-56cb73c61a4c",
+          "id": "67d8369b-bf20-4add-9649-471b18da5cca",
           "leftValue": "={{ $json.ruta }}",
           "rightValue": "estado",
           "operator": {
@@ -269,7 +269,7 @@
         "combinator": "and",
         "conditions": [
          {
-          "id": "217aa9f0-38d5-40fa-b093-fa84ed34307b",
+          "id": "68919576-842c-4367-9802-8fea98d565ba",
           "leftValue": "={{ $json.ruta }}",
           "rightValue": "decision",
           "operator": {
@@ -292,7 +292,7 @@
         "combinator": "and",
         "conditions": [
          {
-          "id": "76ab0a7e-6ddf-451f-89be-64fa7282154e",
+          "id": "8275762e-5491-44d4-8e17-701694be25ab",
           "leftValue": "={{ $json.ruta }}",
           "rightValue": "ayuda",
           "operator": {
@@ -315,7 +315,7 @@
         "combinator": "and",
         "conditions": [
          {
-          "id": "ca81a3ee-6d92-42c8-9c54-5f37d5f57e7c",
+          "id": "6d81bd5e-3cee-4e06-809b-c51d9e299419",
           "leftValue": "={{ $json.ruta }}",
           "rightValue": "no_autorizado",
           "operator": {
@@ -337,7 +337,7 @@
    }
   },
   {
-   "id": "fd96516c-1b3b-46e7-a001-3fe55c512c67",
+   "id": "8aef6586-5172-440e-9a93-b8cba5a2b555",
    "name": "Duplicado ignorado",
    "type": "n8n-nodes-base.noOp",
    "typeVersion": 1,
@@ -348,7 +348,7 @@
    "parameters": {}
   },
   {
-   "id": "4994c693-7f3a-400d-b578-f879b77a211b",
+   "id": "324d97c0-592b-4496-acc9-06c1788894c4",
    "name": "Acuse de recibo",
    "type": "n8n-nodes-base.telegram",
    "typeVersion": 1.2,
@@ -373,7 +373,7 @@
    }
   },
   {
-   "id": "2e6ef5cd-fa0d-4f71-b6dd-298543dac345",
+   "id": "de0cda44-da23-4b0c-b776-9d24c5ba791d",
    "name": "Preparar caso",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -386,7 +386,7 @@
    }
   },
   {
-   "id": "6306c6bb-0b0e-41ea-9d16-b1a4d7aec5e6",
+   "id": "de042d9e-cab0-4309-9137-a72446184d2d",
    "name": "Ejecutar orquestador",
    "type": "n8n-nodes-base.executeWorkflow",
    "typeVersion": 1.2,
@@ -406,7 +406,7 @@
    }
   },
   {
-   "id": "5d1062d9-0574-43d7-9b4f-e04ef59ef40d",
+   "id": "aed5ca3c-a743-477f-9591-be2b7f75be9c",
    "name": "Resultado al solicitante",
    "type": "n8n-nodes-base.telegram",
    "typeVersion": 1.2,
@@ -431,7 +431,7 @@
    }
   },
   {
-   "id": "43b446f0-ff01-40f8-ad39-a40fe5928e31",
+   "id": "60939521-3026-44a6-ac1e-5210997b6a05",
    "name": "Leer caso",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -463,7 +463,7 @@
    "alwaysOutputData": true
   },
   {
-   "id": "7512f834-5779-46f3-8d0e-a12b68917dcf",
+   "id": "1013c40f-d151-438a-8ebc-5cd4e6194da7",
    "name": "Formatear estado",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -476,7 +476,7 @@
    }
   },
   {
-   "id": "b3bcd4c8-cdff-44a6-886e-1d27c82e2974",
+   "id": "98fe6512-6a67-441d-89a4-bee3fece1775",
    "name": "Responder estado",
    "type": "n8n-nodes-base.telegram",
    "typeVersion": 1.2,
@@ -501,7 +501,7 @@
    }
   },
   {
-   "id": "26861380-0e78-4876-a755-b22acb5048b5",
+   "id": "a25d8129-6c36-4cac-b898-88e6617ad660",
    "name": "Leer caso a decidir",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -533,7 +533,7 @@
    "alwaysOutputData": true
   },
   {
-   "id": "328b22fe-94bd-4fa1-b690-3d4ae507f9c2",
+   "id": "c6b978f6-cc94-49bf-be05-6041f219025d",
    "name": "Validar decisión (servidor)",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -546,7 +546,7 @@
    }
   },
   {
-   "id": "8fae7cee-1532-4da1-a4af-dd3c3e960c55",
+   "id": "cdd4c623-e328-4477-9aea-ebbfe269ba1f",
    "name": "¿Decisión válida?",
    "type": "n8n-nodes-base.if",
    "typeVersion": 2.2,
@@ -564,7 +564,7 @@
      },
      "conditions": [
       {
-       "id": "3d5dfed2-9429-4f64-bd06-4ccba98f5e1f",
+       "id": "716e4338-1268-4625-ad0a-dd84f3c0021a",
        "leftValue": "={{ $json.ok }}",
        "rightValue": "",
        "operator": {
@@ -580,7 +580,7 @@
    }
   },
   {
-   "id": "aa2410be-cb35-44d1-8d2e-cbbeb646cd2d",
+   "id": "e3e20660-a542-4079-a19c-1f03c3e6cdf8",
    "name": "Fila decisión",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -593,7 +593,7 @@
    }
   },
   {
-   "id": "9c94b726-c7c8-4ec3-9d0a-2725bb842da3",
+   "id": "a62a49cc-57e5-416b-a5e0-4241745ee949",
    "name": "Guardar decisión",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -629,7 +629,7 @@
    }
   },
   {
-   "id": "08720302-2d68-4f00-b6fe-4a0e4a54fc2c",
+   "id": "49b5c69a-a5f0-4745-a902-81f1cc5b4be1",
    "name": "Traza decisión",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -642,7 +642,7 @@
    }
   },
   {
-   "id": "02980cc7-2f48-4d7b-bdb0-f49559fa893b",
+   "id": "e6068454-3d54-4a86-9993-6e1ace528185",
    "name": "Guardar traza decisión",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -668,7 +668,7 @@
    }
   },
   {
-   "id": "87ffeccd-1190-4b53-a29b-a22baaf5eb59",
+   "id": "a99c5b53-5d88-4ec7-9a6b-b77d14598e2d",
    "name": "Confirmar botón",
    "type": "n8n-nodes-base.telegram",
    "typeVersion": 1.2,
@@ -692,7 +692,7 @@
    "onError": "continueRegularOutput"
   },
   {
-   "id": "13c64044-0f9b-4636-ba13-2148afef6809",
+   "id": "a063391b-8190-42bc-987f-b0fcce62c9fb",
    "name": "Quitar botones",
    "type": "n8n-nodes-base.telegram",
    "typeVersion": 1.2,
@@ -718,7 +718,7 @@
    "onError": "continueRegularOutput"
   },
   {
-   "id": "300528a1-7589-4854-81b6-a9c7feccdd57",
+   "id": "7487eca0-976f-4b1d-b013-c45e516d5be9",
    "name": "Avisar al solicitante",
    "type": "n8n-nodes-base.telegram",
    "typeVersion": 1.2,
@@ -744,7 +744,7 @@
    "onError": "continueRegularOutput"
   },
   {
-   "id": "4b88b05f-a665-44be-91d2-802faa07c42e",
+   "id": "df14ba27-ec79-49fc-ae05-ed2d8b941f48",
    "name": "Rechazar botón",
    "type": "n8n-nodes-base.telegram",
    "typeVersion": 1.2,
@@ -769,7 +769,7 @@
    "onError": "continueRegularOutput"
   },
   {
-   "id": "c6ef78c1-0d45-4fee-9e58-c6e4d58ddac6",
+   "id": "4b24ca01-1f0e-4b58-950d-9f50752d9b3e",
    "name": "Ayuda",
    "type": "n8n-nodes-base.telegram",
    "typeVersion": 1.2,
@@ -794,7 +794,7 @@
    }
   },
   {
-   "id": "dceaf0fa-02e4-4a5d-a8ed-808f73babe7a",
+   "id": "529da010-cd4f-48f3-8d0a-93215e6883be",
    "name": "Sin permiso",
    "type": "n8n-nodes-base.telegram",
    "typeVersion": 1.2,
@@ -820,7 +820,7 @@
    "onError": "continueRegularOutput"
   },
   {
-   "id": "740a44e0-b9e0-493f-840e-731b1d1983bd",
+   "id": "4f0cde46-4e0e-44a8-964b-2277e6d1dc6b",
    "name": "Mensaje de corrección",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -833,7 +833,7 @@
    }
   },
   {
-   "id": "d28be7d6-e2f7-475a-b7f1-119244cdad16",
+   "id": "90a6c2f8-ac7f-4e3d-84cc-215797baca99",
    "name": "Responder corrección",
    "type": "n8n-nodes-base.telegram",
    "typeVersion": 1.2,
