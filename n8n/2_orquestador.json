@@ -2,7 +2,7 @@
  "name": "GastoClaro · 2 Orquestador y agentes",
  "nodes": [
   {
-   "id": "840a4b52-6b9f-4a3f-a588-fc2b1af5dc90",
+   "id": "f0c660ef-f032-4fe8-a04a-611a112d17f6",
    "name": "Entrada del caso",
    "type": "n8n-nodes-base.executeWorkflowTrigger",
    "typeVersion": 1.1,
@@ -15,7 +15,7 @@
    }
   },
   {
-   "id": "17b994c0-45cd-4567-98d5-588dc0ce3ebb",
+   "id": "1fb98c6d-f2a2-4332-8df5-53df6ec608a7",
    "name": "Orquestador · validar y planear",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -28,7 +28,7 @@
    }
   },
   {
-   "id": "fe7e6065-0ec0-4e8c-a001-1388646fcb5f",
+   "id": "f1c6a8ec-e079-40bf-b62a-6c64122e1c5b",
    "name": "Fila inicial del caso",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -41,7 +41,7 @@
    }
   },
   {
-   "id": "ec2f436a-70e8-4909-b3d2-ac8ec5c9baff",
+   "id": "953ad93a-a8df-48ec-ae9c-44b6f1dcac2b",
    "name": "Registrar caso",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -67,7 +67,7 @@
    }
   },
   {
-   "id": "e72eff04-0d03-4534-9401-d09945cfef65",
+   "id": "f0ff94fe-606e-4dfa-b7ab-142659d59589",
    "name": "Orquestador · asignar folio",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -80,7 +80,7 @@
    }
   },
   {
-   "id": "cbb87632-41fd-4857-8c3f-1664e5e7d7bf",
+   "id": "8290b14a-cdd8-4e09-9b17-a96a781d3c4d",
    "name": "Fila folio",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -93,7 +93,7 @@
    }
   },
   {
-   "id": "3465472c-995a-42ad-8392-864323906495",
+   "id": "d2d144db-8319-4dbe-9c3d-2c10ce40c033",
    "name": "Guardar folio",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -129,7 +129,7 @@
    }
   },
   {
-   "id": "b1a5e3dd-ac3e-4e96-8ad2-10e1bd483f72",
+   "id": "f7f3baa7-ff90-4f30-86bf-ff35e45de3fc",
    "name": "¿Entrada válida?",
    "type": "n8n-nodes-base.if",
    "typeVersion": 2.2,
@@ -147,7 +147,7 @@
      },
      "conditions": [
       {
-       "id": "7dd487e0-c81f-4fec-89cd-f73d918db3bf",
+       "id": "cd31d088-05b2-4386-8a80-2d9a7ad0edb1",
        "leftValue": "={{ !$('Orquestador · asignar folio').first().json.guardrail }}",
        "rightValue": "",
        "operator": {
@@ -163,7 +163,7 @@
    }
   },
   {
-   "id": "15d5e45e-5e18-4a34-b959-6edbfd104d13",
+   "id": "3214daed-6c80-4d5c-a68d-6f5a3de0b2a1",
    "name": "Skill · solicitud-gasto",
    "type": "n8n-nodes-base.httpRequest",
    "typeVersion": 4.2,
@@ -186,7 +186,7 @@
    "onError": "continueRegularOutput"
   },
   {
-   "id": "3859f289-975e-40d0-82db-237879cc7d49",
+   "id": "6554880e-d2b1-4869-8a95-4ffa290dc780",
    "name": "Skill · revision-politica",
    "type": "n8n-nodes-base.httpRequest",
    "typeVersion": 4.2,
@@ -209,7 +209,7 @@
    "onError": "continueRegularOutput"
   },
   {
-   "id": "7e2bbd07-7eaa-4c37-aee4-aad4ef5064b9",
+   "id": "c32f0e97-dbf3-45d8-bd8a-5429ff30951a",
    "name": "Orquestador · cargar skills",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -222,7 +222,7 @@
    }
   },
   {
-   "id": "fa0e7c0f-34e4-445d-89b4-fd6f863ac9d0",
+   "id": "801dce61-fb96-43c8-944b-f832824977ca",
    "name": "A1 · preparar",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -235,7 +235,7 @@
    }
   },
   {
-   "id": "600db0ee-ba3d-4d5e-9f0b-564237b1b4b8",
+   "id": "718ec3c6-8c6f-46be-be71-3293432d4e65",
    "name": "Presupuesto A1",
    "type": "n8n-nodes-base.if",
    "typeVersion": 2.2,
@@ -253,7 +253,7 @@
      },
      "conditions": [
       {
-       "id": "52b1a38a-bf54-46e6-97ea-3b72a5ef80a5",
+       "id": "72b70200-7b7b-4aa1-8e0f-3aac81966530",
        "leftValue": "={{ $json.presupuesto_ok }}",
        "rightValue": "",
        "operator": {
@@ -269,7 +269,7 @@
    }
   },
   {
-   "id": "f638d6f2-7ff7-4c23-92eb-2a3c6df0ad1a",
+   "id": "0daa181a-afad-47fb-980e-a21f2e1718e0",
    "name": "Modelo A1",
    "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
    "typeVersion": 1.2,
@@ -301,7 +301,7 @@
    }
   },
   {
-   "id": "53c81896-2524-4e71-9c39-6d87f27c96aa",
+   "id": "7144a708-1994-455b-b71c-17d4c77187ff",
    "name": "A1 · Intake (LLM)",
    "type": "@n8n/n8n-nodes-langchain.chainLlm",
    "typeVersion": 1.7,
@@ -325,7 +325,7 @@
    "waitBetweenTries": 1500
   },
   {
-   "id": "0a201612-39d2-46f3-91b8-00e32695644e",
+   "id": "28cf863d-0122-4768-80d1-09a0345dccf0",
    "name": "A1 · validar salida",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -338,7 +338,7 @@
    }
   },
   {
-   "id": "a26dbce4-e682-4453-a4a1-37b15d1c7cb8",
+   "id": "3ff2bbb1-9196-415b-a2bd-a36265e826f9",
    "name": "¿Requerimiento completo?",
    "type": "n8n-nodes-base.if",
    "typeVersion": 2.2,
@@ -356,7 +356,7 @@
      },
      "conditions": [
       {
-       "id": "e5831176-3e60-47e7-862f-cb5c70e1a5fa",
+       "id": "5ee0a6e5-97e9-4e5a-abfd-fc6bd22bd4a3",
        "leftValue": "={{ !$json.detener }}",
        "rightValue": "",
        "operator": {
@@ -372,7 +372,7 @@
    }
   },
   {
-   "id": "5111d62e-40a1-4d4f-9b52-4b27526cdf75",
+   "id": "bce7db1a-522c-44eb-8160-0f9609c4e355",
    "name": "Leer presupuesto del CC",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -403,7 +403,7 @@
    "alwaysOutputData": true
   },
   {
-   "id": "6c30d243-7416-405a-908f-5f871537b17f",
+   "id": "19d7c412-1b63-40ef-8d61-dfe500905313",
    "name": "Leer catálogo autorizado",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -435,7 +435,7 @@
    "executeOnce": true
   },
   {
-   "id": "551ce238-8eb3-4bf7-9644-f4d8080df9d1",
+   "id": "0e0d820f-670e-438d-8145-6c600c66f069",
    "name": "A2 · preparar",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -448,7 +448,7 @@
    }
   },
   {
-   "id": "77b95f07-eecb-4f25-86e7-fbaa51f5b509",
+   "id": "e12d1ca8-39d0-4458-9f69-2c1b6f100a1d",
    "name": "Historial del CC",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -480,7 +480,7 @@
    "executeOnce": true
   },
   {
-   "id": "1cc683ec-5c99-43c0-b28a-ad5c7a4f5ef3",
+   "id": "7d6cd910-c234-41fe-a4ae-dae15638bee7",
    "name": "Presupuesto A2",
    "type": "n8n-nodes-base.if",
    "typeVersion": 2.2,
@@ -498,7 +498,7 @@
      },
      "conditions": [
       {
-       "id": "24c2d17d-9b95-4777-b841-078589524a64",
+       "id": "463f654b-dc30-4072-8d6e-c3edd265d7f2",
        "leftValue": "={{ $json.presupuesto_ok }}",
        "rightValue": "",
        "operator": {
@@ -514,7 +514,7 @@
    }
   },
   {
-   "id": "185a1867-434a-4444-82ae-e3941170657b",
+   "id": "abc7f8b2-296f-455d-8989-e25455c214cc",
    "name": "Modelo A2",
    "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
    "typeVersion": 1.2,
@@ -546,7 +546,7 @@
    }
   },
   {
-   "id": "5287c79e-5457-4aae-9cc8-d3f10c807851",
+   "id": "13447b5f-0b31-46b5-8cc5-efac289792c9",
    "name": "A2 · Datos (LLM)",
    "type": "@n8n/n8n-nodes-langchain.chainLlm",
    "typeVersion": 1.7,
@@ -570,7 +570,7 @@
    "waitBetweenTries": 1500
   },
   {
-   "id": "8153aee0-3b27-4892-9706-d528ccabcc7b",
+   "id": "42b17ee3-9a3f-4dab-8db3-d52f4fa9cb49",
    "name": "A2 · verificar fuentes",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -583,7 +583,7 @@
    }
   },
   {
-   "id": "27c913ed-7cf9-4b9c-b91b-19aea0c086b8",
+   "id": "a9537e30-57ac-4f92-95ae-3e1b0ead186b",
    "name": "Modelo A3",
    "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
    "typeVersion": 1.2,
@@ -615,7 +615,7 @@
    }
   },
   {
-   "id": "479fa5ac-cfb8-4d54-8086-6fc4746e9684",
+   "id": "8f9f1a32-954f-42d7-ae21-927f6f1c13df",
    "name": "Modelo A4",
    "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
    "typeVersion": 1.2,
@@ -647,7 +647,7 @@
    }
   },
   {
-   "id": "f3a38e68-3810-40c6-a7ce-16bb92f2d27f",
+   "id": "c241f939-42be-4b0b-8c59-184b0248adf8",
    "name": "A3 v1 · preparar",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -660,7 +660,7 @@
    }
   },
   {
-   "id": "06739cdd-5802-47a6-a2ef-cc3e928888e5",
+   "id": "00e8541f-e92c-4304-9024-4c6f8a662a07",
    "name": "Presupuesto A3 v1",
    "type": "n8n-nodes-base.if",
    "typeVersion": 2.2,
@@ -678,7 +678,7 @@
      },
      "conditions": [
       {
-       "id": "fd221991-09f3-4ef6-b6ed-c5a95b2b9202",
+       "id": "613cc2d7-8366-4879-973a-d59ec019e81d",
        "leftValue": "={{ $json.presupuesto_ok }}",
        "rightValue": "",
        "operator": {
@@ -694,7 +694,7 @@
    }
   },
   {
-   "id": "c624ccea-f316-4639-9974-4b94201084d2",
+   "id": "b5957735-89d6-458a-84df-bf3ddd8b88f2",
    "name": "A3 v1 · Análisis (LLM)",
    "type": "@n8n/n8n-nodes-langchain.chainLlm",
    "typeVersion": 1.7,
@@ -718,7 +718,7 @@
    "waitBetweenTries": 1500
   },
   {
-   "id": "7326f835-1aa5-4018-8593-89bf61175aee",
+   "id": "2d1945b6-23c0-4d58-a18f-b909b38623ca",
    "name": "A3 v1 · validar",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -731,7 +731,7 @@
    }
   },
   {
-   "id": "c69b9f41-d146-4a0b-9d16-8d2c371930ca",
+   "id": "fccbdbd4-fcc3-4f94-88c4-b2a81a23355b",
    "name": "A4 v1 · preparar",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -744,7 +744,7 @@
    }
   },
   {
-   "id": "805ecfb1-b41c-4ac0-8b80-1a43e86de0bc",
+   "id": "05f45b17-3dd1-4be3-a237-8be8501801cb",
    "name": "Presupuesto A4 v1",
    "type": "n8n-nodes-base.if",
    "typeVersion": 2.2,
@@ -762,7 +762,7 @@
      },
      "conditions": [
       {
-       "id": "21f3402b-0fe4-4367-8314-9c76ffd86d13",
+       "id": "2ee34676-c093-4245-8007-3c2f4e7457e9",
        "leftValue": "={{ $json.presupuesto_ok }}",
        "rightValue": "",
        "operator": {
@@ -778,7 +778,7 @@
    }
   },
   {
-   "id": "e3732c0e-ae16-4ecf-b334-aa9a539a0afe",
+   "id": "3a831f93-cacd-4724-8879-a52fbc0ee62f",
    "name": "A4 v1 · Revisor (LLM)",
    "type": "@n8n/n8n-nodes-langchain.chainLlm",
    "typeVersion": 1.7,
@@ -802,7 +802,7 @@
    "waitBetweenTries": 1500
   },
   {
-   "id": "82505d6b-ed56-4de2-9246-f987d1f409e9",
+   "id": "43d28eb6-4e7d-4ded-876e-dc37d3e4d995",
    "name": "A4 v1 · veredicto",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -811,11 +811,11 @@
     200
    ],
    "parameters": {
-    "jsCode": "const TARIFA = { entrada: 0.15, salida: 0.60, fuente: 'OpenAI gpt-4o-mini, precio de lista USD/1M tokens (consultado 2026-11-04)' };\nconst estTok = s => Math.ceil(String(s || '').length / 4);\nconst usd = (ti, to) => +(((ti * TARIFA.entrada) + (to * TARIFA.salida)) / 1e6).toFixed(8);\nconst ahora = () => new Date().toISOString();\nconst fmt = n => (n === null || n === undefined || isNaN(n)) ? 'n/d' : Number(n).toLocaleString('es-MX', { maximumFractionDigits: 2 });\nconst esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\nfunction parseJSON(t) {\n  const s = String(t || '').replace(/```json|```/g, '').trim();\n  const a = s.indexOf('{'), b = s.lastIndexOf('}');\n  if (a < 0 || b < a) throw new Error('sin JSON');\n  return JSON.parse(s.slice(a, b + 1));\n}\nfunction traza(st, rol, version, estado, entrada, salida, extra = {}) {\n  st.trazas.push({ caso_id: st.caso_id || 'PENDIENTE', paso: st.trazas.length + 1, rol, version: version || 0, estado,\n    skill: extra.skill || '', entrada: String(entrada || '').slice(0, 480), salida: String(salida || '').slice(0, 1400),\n    tokens_in_est: extra.ti || 0, tokens_out_est: extra.to || 0, costo_est_usd: usd(extra.ti || 0, extra.to || 0),\n    duracion_ms: extra.ms || 0, ejecucion_id: String($execution.id) });\n}\nfunction control(st, paso, prompt) {\n  // Loop de seguridad y costo: evaluar presupuesto ANTES de llamar al modelo.\n  const tin = estTok(prompt), reserva = st.limites.reserva_salida;\n  const usados = st.uso.tokens_in + st.uso.tokens_out;\n  const ok = st.uso.llamadas < st.limites.llamadas && (usados + tin + reserva) <= st.limites.tokens\n             && (st.uso.usd + usd(tin, reserva)) <= st.limites.usd;\n  if (!ok) {\n    st.detener = { motivo: 'presupuesto', paso };\n    traza(st, 'Orquestador', 0, 'detenido_presupuesto', `paso=${paso} llamadas=${st.uso.llamadas}/${st.limites.llamadas}`,\n      `tokens usados+próximos+reserva=${usados + tin + reserva} > límite ${st.limites.tokens} o USD > ${st.limites.usd}`);\n  } else {\n    traza(st, 'Orquestador', 0, 'presupuesto_ok', `paso=${paso}`, `tokens=${usados}+${tin}+${reserva}/${st.limites.tokens}; llamadas=${st.uso.llamadas}/${st.limites.llamadas}`);\n  }\n  st.presupuesto_ok = ok; st._t0 = Date.now(); st._tin = tin;\n  return ok;\n}\nfunction registrarLLM(st, rol, version, prompt, salida, skill) {\n  const ti = estTok(prompt), to = estTok(salida);\n  st.uso.llamadas += 1; st.uso.tokens_in += ti; st.uso.tokens_out += to; st.uso.usd = +(st.uso.usd + usd(ti, to)).toFixed(8);\n  traza(st, rol, version, 'llm_ok', prompt.slice(-480), salida, { ti, to, ms: Date.now() - (st._t0 || Date.now()), skill });\n}\n\n\nconst st = JSON.parse(JSON.stringify($('A4 v1 · preparar').first().json));\nconst _j = $input.first().json; const raw = typeof _j.text === 'string' ? _j.text : JSON.stringify(_j);\nregistrarLLM(st, 'A4 Revisor', st.iteracion, st.prompt_sistema + st.prompt_usuario, raw, st.skills.calidad.nombre + '@' + st.skills.calidad.version);\nlet r; try { r = parseJSON(raw); } catch (e) { r = { veredicto: 'devuelto', correcciones: ['Salida de revisión ilegible'], advertencias: [] }; }\n// Control del servidor: criterios verificables que el LLM no puede desactivar\nconst p = st.propuesta, c = st.calc, correcc = [];\nif (!st.esperado.includes(p.recomendacion)) correcc.push(`La recomendación \"${p.recomendacion}\" no es coherente con las políticas. Fallan: ${st.politicas.filter(x => !x.ok).map(x => x.id + ' (' + x.detalle + ')').join('; ') || 'ninguna'}. Recomendación válida: ${st.esperado.join(' o ')}.`);\nif (!/simulad/i.test(p.resumen)) correcc.push('El resumen debe incluir la frase \"resultado simulado\".');\nif (!p.resumen.includes(st.caso_id)) correcc.push(`El resumen debe incluir el folio ${st.caso_id}.`);\nconst permitidos = [st.fraccionamiento ? st.fraccionamiento.suma : null, c.monto_total, c.disponible, c.disponible_despues, c.precio_ref, st.req.precio_unitario, st.req.cantidad, c.consumo_pct_despues, c.variacion_precio_pct, Math.abs(c.variacion_precio_pct || 0), 15, 50000, 150000].filter(v => v !== null).map(Number);\nconst nums = (p.resumen.match(/\\d[\\d,]*(\\.\\d+)?/g) || []).map(s => Number(s.replace(/,/g, ''))).filter(n => n >= 100 && !String(n).startsWith('2026'));\nconst enTexto = n => (st.texto + ' ' + st.req.concepto).replace(/,/g, '').includes(String(n));\nconst ajenos = nums.filter(n => !permitidos.some(v => Math.abs(v - n) <= Math.max(1, Math.abs(v) * 0.005)) && !enTexto(n) && n !== Number(st.caso_id.slice(4)));\nif (ajenos.length) correcc.push(`El resumen contiene cifras que no provienen del cálculo: ${ajenos.join(', ')}. Usa solo monto ${c.monto_total} y disponible después ${c.disponible_despues}.`);\nif (!p.supuestos.length) correcc.push('Incluye al menos un supuesto explícito.');\nconst llmOk = String(r.veredicto).toLowerCase() === 'aprobado';\nconst veredicto = (llmOk && !correcc.length) ? 'aprobado' : 'devuelto';\nconst todas = [...correcc, ...(llmOk ? [] : (r.correcciones || []).map(String))].slice(0, 5);\nst.revision = { version: st.iteracion, veredicto, correcciones: todas, advertencias: (r.advertencias || []).map(String).slice(0, 3), override_servidor: llmOk && correcc.length > 0 };\ntraza(st, 'A4 Revisor', st.iteracion, 'revision_' + veredicto + (st.revision.override_servidor ? '_override_servidor' : ''), 'propuesta v' + st.iteracion, JSON.stringify(st.revision));\nst.correcciones = todas;\nst.fin_calidad = veredicto === 'aprobado' || st.iteracion >= st.limites.iteraciones_calidad;\nif (veredicto !== 'aprobado' && st.iteracion >= st.limites.iteraciones_calidad) { st.detener = { motivo: 'calidad', paso: 'A4 v' + st.iteracion }; traza(st, 'Orquestador', st.iteracion, 'detenido_calidad', 'máx. 3 iteraciones', 'Se agotó el límite del loop de calidad'); }\nreturn [{ json: st }];"
+    "jsCode": "const TARIFA = { entrada: 0.15, salida: 0.60, fuente: 'OpenAI gpt-4o-mini, precio de lista USD/1M tokens (consultado 2026-11-04)' };\nconst estTok = s => Math.ceil(String(s || '').length / 4);\nconst usd = (ti, to) => +(((ti * TARIFA.entrada) + (to * TARIFA.salida)) / 1e6).toFixed(8);\nconst ahora = () => new Date().toISOString();\nconst fmt = n => (n === null || n === undefined || isNaN(n)) ? 'n/d' : Number(n).toLocaleString('es-MX', { maximumFractionDigits: 2 });\nconst esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\nfunction parseJSON(t) {\n  const s = String(t || '').replace(/```json|```/g, '').trim();\n  const a = s.indexOf('{'), b = s.lastIndexOf('}');\n  if (a < 0 || b < a) throw new Error('sin JSON');\n  return JSON.parse(s.slice(a, b + 1));\n}\nfunction traza(st, rol, version, estado, entrada, salida, extra = {}) {\n  st.trazas.push({ caso_id: st.caso_id || 'PENDIENTE', paso: st.trazas.length + 1, rol, version: version || 0, estado,\n    skill: extra.skill || '', entrada: String(entrada || '').slice(0, 480), salida: String(salida || '').slice(0, 1400),\n    tokens_in_est: extra.ti || 0, tokens_out_est: extra.to || 0, costo_est_usd: usd(extra.ti || 0, extra.to || 0),\n    duracion_ms: extra.ms || 0, ejecucion_id: String($execution.id) });\n}\nfunction control(st, paso, prompt) {\n  // Loop de seguridad y costo: evaluar presupuesto ANTES de llamar al modelo.\n  const tin = estTok(prompt), reserva = st.limites.reserva_salida;\n  const usados = st.uso.tokens_in + st.uso.tokens_out;\n  const ok = st.uso.llamadas < st.limites.llamadas && (usados + tin + reserva) <= st.limites.tokens\n             && (st.uso.usd + usd(tin, reserva)) <= st.limites.usd;\n  if (!ok) {\n    st.detener = { motivo: 'presupuesto', paso };\n    traza(st, 'Orquestador', 0, 'detenido_presupuesto', `paso=${paso} llamadas=${st.uso.llamadas}/${st.limites.llamadas}`,\n      `tokens usados+próximos+reserva=${usados + tin + reserva} > límite ${st.limites.tokens} o USD > ${st.limites.usd}`);\n  } else {\n    traza(st, 'Orquestador', 0, 'presupuesto_ok', `paso=${paso}`, `tokens=${usados}+${tin}+${reserva}/${st.limites.tokens}; llamadas=${st.uso.llamadas}/${st.limites.llamadas}`);\n  }\n  st.presupuesto_ok = ok; st._t0 = Date.now(); st._tin = tin;\n  return ok;\n}\nfunction registrarLLM(st, rol, version, prompt, salida, skill) {\n  const ti = estTok(prompt), to = estTok(salida);\n  st.uso.llamadas += 1; st.uso.tokens_in += ti; st.uso.tokens_out += to; st.uso.usd = +(st.uso.usd + usd(ti, to)).toFixed(8);\n  traza(st, rol, version, 'llm_ok', prompt.slice(-480), salida, { ti, to, ms: Date.now() - (st._t0 || Date.now()), skill });\n}\n\n\nconst st = JSON.parse(JSON.stringify($('A4 v1 · preparar').first().json));\nconst _j = $input.first().json; const raw = typeof _j.text === 'string' ? _j.text : JSON.stringify(_j);\nregistrarLLM(st, 'A4 Revisor', st.iteracion, st.prompt_sistema + st.prompt_usuario, raw, st.skills.calidad.nombre + '@' + st.skills.calidad.version);\nlet r; try { r = parseJSON(raw); } catch (e) { r = { veredicto: 'devuelto', correcciones: ['Salida de revisión ilegible'], advertencias: [] }; }\n// Control del servidor: criterios verificables que el LLM no puede desactivar\nconst p = st.propuesta, c = st.calc, correcc = [];\nif (!st.esperado.includes(p.recomendacion)) correcc.push(`La recomendación \"${p.recomendacion}\" no es coherente con las políticas. Fallan: ${st.politicas.filter(x => !x.ok).map(x => x.id + ' (' + x.detalle + ')').join('; ') || 'ninguna'}. Recomendación válida: ${st.esperado.join(' o ')}.`);\nif (!/simulad/i.test(p.resumen)) correcc.push('El resumen debe incluir la frase \"resultado simulado\".');\nif (!p.resumen.includes(st.caso_id)) correcc.push(`El resumen debe incluir el folio ${st.caso_id}.`);\nconst permitidos = [st.fraccionamiento ? st.fraccionamiento.suma : null, c.monto_total, c.disponible, c.disponible_despues, c.precio_ref, st.req.precio_unitario, st.req.cantidad, c.consumo_pct_despues, c.variacion_precio_pct, Math.abs(c.variacion_precio_pct || 0), 15, 50000, 150000].filter(v => v !== null).map(Number);\nconst nums = (p.resumen.match(/\\d[\\d,]*(\\.\\d+)?/g) || []).map(s => Number(s.replace(/,/g, ''))).filter(n => n >= 100 && !String(n).startsWith('2026'));\nconst enTexto = n => (st.texto + ' ' + st.req.concepto).replace(/,/g, '').includes(String(n));\nconst ajenos = nums.filter(n => !permitidos.some(v => Math.abs(v - n) <= Math.max(1, Math.abs(v) * 0.005)) && !enTexto(n) && n !== Number(st.caso_id.slice(4)));\nif (ajenos.length) correcc.push(`El resumen contiene cifras que no provienen del cálculo: ${ajenos.join(', ')}. Usa solo monto ${c.monto_total} y disponible después ${c.disponible_despues}.`);\nif (!p.supuestos.length) correcc.push('Incluye al menos un supuesto explícito.');\nconst llmOk = String(r.veredicto).toLowerCase() === 'aprobado';\n// El servidor es la autoridad en políticas: se descartan correcciones del LLM que citan una política que SÍ se cumple (alucinación del revisor)\nconst pasadas = st.politicas.filter(x => x.ok).map(x => x.id);\nconst llmCorr = (r.correcciones || []).map(String);\nconst alucinadas = llmCorr.filter(t => pasadas.some(id => t.includes(id)) || /cotizaci/i.test(t) && pasadas.includes('POL-02'));\nconst cualitativas = llmCorr.filter(t => !alucinadas.includes(t) && !/POL-0\\d/.test(t));\nconst llmDevuelveValido = !llmOk && cualitativas.length > 0 && st.iteracion === 1;\nconst veredicto = (!correcc.length && !llmDevuelveValido) ? 'aprobado' : 'devuelto';\nconst todas = [...correcc, ...(llmDevuelveValido ? cualitativas : [])].slice(0, 5);\nst.revision = { version: st.iteracion, veredicto, correcciones: todas, advertencias: (r.advertencias || []).map(String).slice(0, 3),\n  override_servidor: (llmOk && correcc.length > 0) || (!llmOk && veredicto === 'aprobado'), veredicto_llm: llmOk ? 'aprobado' : 'devuelto', alucinaciones_descartadas: alucinadas.slice(0, 3) };\nif (alucinadas.length) traza(st, 'A4 Revisor', st.iteracion, 'control_servidor_descarta_alucinacion', 'correcciones del LLM', alucinadas.join(' | '));\ntraza(st, 'A4 Revisor', st.iteracion, 'revision_' + veredicto + (st.revision.override_servidor ? '_override_servidor' : ''), 'propuesta v' + st.iteracion, JSON.stringify(st.revision));\nst.correcciones = todas;\nst.fin_calidad = veredicto === 'aprobado' || st.iteracion >= st.limites.iteraciones_calidad;\nif (veredicto !== 'aprobado' && st.iteracion >= st.limites.iteraciones_calidad) { st.detener = { motivo: 'calidad', paso: 'A4 v' + st.iteracion }; traza(st, 'Orquestador', st.iteracion, 'detenido_calidad', 'máx. 3 iteraciones', 'Se agotó el límite del loop de calidad'); }\nreturn [{ json: st }];"
    }
   },
   {
-   "id": "7ec6b55a-02df-4e14-a0c0-6b34a6ccb784",
+   "id": "1b910c6c-5939-4df5-8a64-6bfbb029ecef",
    "name": "¿Liberar tras v1?",
    "type": "n8n-nodes-base.if",
    "typeVersion": 2.2,
@@ -833,7 +833,7 @@
      },
      "conditions": [
       {
-       "id": "dfa206fe-0ac5-4bc9-af0f-fb47f5864bc1",
+       "id": "81b995f8-6a2a-468c-afdb-6acab69f2816",
        "leftValue": "={{ $json.fin_calidad }}",
        "rightValue": "",
        "operator": {
@@ -849,7 +849,7 @@
    }
   },
   {
-   "id": "3775bcf9-19f2-42c3-8d4f-c79c94258ef3",
+   "id": "0efd2836-85e1-458b-b766-d6a984548f65",
    "name": "A3 v2 · preparar",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -862,7 +862,7 @@
    }
   },
   {
-   "id": "9e6c3c1f-b236-4951-a959-e30b7c4f60e9",
+   "id": "32f1a2c2-dd83-4539-bc46-fa2774a38a10",
    "name": "Presupuesto A3 v2",
    "type": "n8n-nodes-base.if",
    "typeVersion": 2.2,
@@ -880,7 +880,7 @@
      },
      "conditions": [
       {
-       "id": "de65c045-efce-48d8-94cc-7b7c22aae221",
+       "id": "aee799ac-fae1-4bb3-82df-3190c560c888",
        "leftValue": "={{ $json.presupuesto_ok }}",
        "rightValue": "",
        "operator": {
@@ -896,7 +896,7 @@
    }
   },
   {
-   "id": "afca9f7e-4cff-42ad-8c7f-0613ab4cdaf5",
+   "id": "38e96e32-221e-485b-a126-277ee4d050bb",
    "name": "A3 v2 · Análisis (LLM)",
    "type": "@n8n/n8n-nodes-langchain.chainLlm",
    "typeVersion": 1.7,
@@ -920,7 +920,7 @@
    "waitBetweenTries": 1500
   },
   {
-   "id": "ba896ce9-b2eb-41c0-b224-6f84156a9c8a",
+   "id": "106d95ae-377f-4e4a-a74b-a9fcb62e1bde",
    "name": "A3 v2 · validar",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -933,7 +933,7 @@
    }
   },
   {
-   "id": "13d7c233-1056-4523-b47e-b659251822a9",
+   "id": "bb4408f7-7672-4dec-ac22-2fa88f588a1d",
    "name": "A4 v2 · preparar",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -946,7 +946,7 @@
    }
   },
   {
-   "id": "eebab9c6-1832-4b38-a22e-de5f676f8b3e",
+   "id": "7309e888-68f4-43ad-8043-9666e278a004",
    "name": "Presupuesto A4 v2",
    "type": "n8n-nodes-base.if",
    "typeVersion": 2.2,
@@ -964,7 +964,7 @@
      },
      "conditions": [
       {
-       "id": "18af6067-2b21-419c-95aa-e8e0324cbe27",
+       "id": "f2ce62b8-ef3a-432c-a444-a9e4bf6d16bc",
        "leftValue": "={{ $json.presupuesto_ok }}",
        "rightValue": "",
        "operator": {
@@ -980,7 +980,7 @@
    }
   },
   {
-   "id": "46c32708-f1e0-492d-b74b-a6e6f24c9815",
+   "id": "3d21a71a-6aa2-45d5-a585-eeedf0e021ec",
    "name": "A4 v2 · Revisor (LLM)",
    "type": "@n8n/n8n-nodes-langchain.chainLlm",
    "typeVersion": 1.7,
@@ -1004,7 +1004,7 @@
    "waitBetweenTries": 1500
   },
   {
-   "id": "d7817339-4a47-4da3-9a47-5e90048cf88b",
+   "id": "54d10cad-3a93-4f04-bbc6-e1f90a9b8745",
    "name": "A4 v2 · veredicto",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -1013,11 +1013,11 @@
     200
    ],
    "parameters": {
-    "jsCode": "const TARIFA = { entrada: 0.15, salida: 0.60, fuente: 'OpenAI gpt-4o-mini, precio de lista USD/1M tokens (consultado 2026-11-04)' };\nconst estTok = s => Math.ceil(String(s || '').length / 4);\nconst usd = (ti, to) => +(((ti * TARIFA.entrada) + (to * TARIFA.salida)) / 1e6).toFixed(8);\nconst ahora = () => new Date().toISOString();\nconst fmt = n => (n === null || n === undefined || isNaN(n)) ? 'n/d' : Number(n).toLocaleString('es-MX', { maximumFractionDigits: 2 });\nconst esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\nfunction parseJSON(t) {\n  const s = String(t || '').replace(/```json|```/g, '').trim();\n  const a = s.indexOf('{'), b = s.lastIndexOf('}');\n  if (a < 0 || b < a) throw new Error('sin JSON');\n  return JSON.parse(s.slice(a, b + 1));\n}\nfunction traza(st, rol, version, estado, entrada, salida, extra = {}) {\n  st.trazas.push({ caso_id: st.caso_id || 'PENDIENTE', paso: st.trazas.length + 1, rol, version: version || 0, estado,\n    skill: extra.skill || '', entrada: String(entrada || '').slice(0, 480), salida: String(salida || '').slice(0, 1400),\n    tokens_in_est: extra.ti || 0, tokens_out_est: extra.to || 0, costo_est_usd: usd(extra.ti || 0, extra.to || 0),\n    duracion_ms: extra.ms || 0, ejecucion_id: String($execution.id) });\n}\nfunction control(st, paso, prompt) {\n  // Loop de seguridad y costo: evaluar presupuesto ANTES de llamar al modelo.\n  const tin = estTok(prompt), reserva = st.limites.reserva_salida;\n  const usados = st.uso.tokens_in + st.uso.tokens_out;\n  const ok = st.uso.llamadas < st.limites.llamadas && (usados + tin + reserva) <= st.limites.tokens\n             && (st.uso.usd + usd(tin, reserva)) <= st.limites.usd;\n  if (!ok) {\n    st.detener = { motivo: 'presupuesto', paso };\n    traza(st, 'Orquestador', 0, 'detenido_presupuesto', `paso=${paso} llamadas=${st.uso.llamadas}/${st.limites.llamadas}`,\n      `tokens usados+próximos+reserva=${usados + tin + reserva} > límite ${st.limites.tokens} o USD > ${st.limites.usd}`);\n  } else {\n    traza(st, 'Orquestador', 0, 'presupuesto_ok', `paso=${paso}`, `tokens=${usados}+${tin}+${reserva}/${st.limites.tokens}; llamadas=${st.uso.llamadas}/${st.limites.llamadas}`);\n  }\n  st.presupuesto_ok = ok; st._t0 = Date.now(); st._tin = tin;\n  return ok;\n}\nfunction registrarLLM(st, rol, version, prompt, salida, skill) {\n  const ti = estTok(prompt), to = estTok(salida);\n  st.uso.llamadas += 1; st.uso.tokens_in += ti; st.uso.tokens_out += to; st.uso.usd = +(st.uso.usd + usd(ti, to)).toFixed(8);\n  traza(st, rol, version, 'llm_ok', prompt.slice(-480), salida, { ti, to, ms: Date.now() - (st._t0 || Date.now()), skill });\n}\n\n\nconst st = JSON.parse(JSON.stringify($('A4 v2 · preparar').first().json));\nconst _j = $input.first().json; const raw = typeof _j.text === 'string' ? _j.text : JSON.stringify(_j);\nregistrarLLM(st, 'A4 Revisor', st.iteracion, st.prompt_sistema + st.prompt_usuario, raw, st.skills.calidad.nombre + '@' + st.skills.calidad.version);\nlet r; try { r = parseJSON(raw); } catch (e) { r = { veredicto: 'devuelto', correcciones: ['Salida de revisión ilegible'], advertencias: [] }; }\n// Control del servidor: criterios verificables que el LLM no puede desactivar\nconst p = st.propuesta, c = st.calc, correcc = [];\nif (!st.esperado.includes(p.recomendacion)) correcc.push(`La recomendación \"${p.recomendacion}\" no es coherente con las políticas. Fallan: ${st.politicas.filter(x => !x.ok).map(x => x.id + ' (' + x.detalle + ')').join('; ') || 'ninguna'}. Recomendación válida: ${st.esperado.join(' o ')}.`);\nif (!/simulad/i.test(p.resumen)) correcc.push('El resumen debe incluir la frase \"resultado simulado\".');\nif (!p.resumen.includes(st.caso_id)) correcc.push(`El resumen debe incluir el folio ${st.caso_id}.`);\nconst permitidos = [st.fraccionamiento ? st.fraccionamiento.suma : null, c.monto_total, c.disponible, c.disponible_despues, c.precio_ref, st.req.precio_unitario, st.req.cantidad, c.consumo_pct_despues, c.variacion_precio_pct, Math.abs(c.variacion_precio_pct || 0), 15, 50000, 150000].filter(v => v !== null).map(Number);\nconst nums = (p.resumen.match(/\\d[\\d,]*(\\.\\d+)?/g) || []).map(s => Number(s.replace(/,/g, ''))).filter(n => n >= 100 && !String(n).startsWith('2026'));\nconst enTexto = n => (st.texto + ' ' + st.req.concepto).replace(/,/g, '').includes(String(n));\nconst ajenos = nums.filter(n => !permitidos.some(v => Math.abs(v - n) <= Math.max(1, Math.abs(v) * 0.005)) && !enTexto(n) && n !== Number(st.caso_id.slice(4)));\nif (ajenos.length) correcc.push(`El resumen contiene cifras que no provienen del cálculo: ${ajenos.join(', ')}. Usa solo monto ${c.monto_total} y disponible después ${c.disponible_despues}.`);\nif (!p.supuestos.length) correcc.push('Incluye al menos un supuesto explícito.');\nconst llmOk = String(r.veredicto).toLowerCase() === 'aprobado';\nconst veredicto = (llmOk && !correcc.length) ? 'aprobado' : 'devuelto';\nconst todas = [...correcc, ...(llmOk ? [] : (r.correcciones || []).map(String))].slice(0, 5);\nst.revision = { version: st.iteracion, veredicto, correcciones: todas, advertencias: (r.advertencias || []).map(String).slice(0, 3), override_servidor: llmOk && correcc.length > 0 };\ntraza(st, 'A4 Revisor', st.iteracion, 'revision_' + veredicto + (st.revision.override_servidor ? '_override_servidor' : ''), 'propuesta v' + st.iteracion, JSON.stringify(st.revision));\nst.correcciones = todas;\nst.fin_calidad = veredicto === 'aprobado' || st.iteracion >= st.limites.iteraciones_calidad;\nif (veredicto !== 'aprobado' && st.iteracion >= st.limites.iteraciones_calidad) { st.detener = { motivo: 'calidad', paso: 'A4 v' + st.iteracion }; traza(st, 'Orquestador', st.iteracion, 'detenido_calidad', 'máx. 3 iteraciones', 'Se agotó el límite del loop de calidad'); }\nreturn [{ json: st }];"
+    "jsCode": "const TARIFA = { entrada: 0.15, salida: 0.60, fuente: 'OpenAI gpt-4o-mini, precio de lista USD/1M tokens (consultado 2026-11-04)' };\nconst estTok = s => Math.ceil(String(s || '').length / 4);\nconst usd = (ti, to) => +(((ti * TARIFA.entrada) + (to * TARIFA.salida)) / 1e6).toFixed(8);\nconst ahora = () => new Date().toISOString();\nconst fmt = n => (n === null || n === undefined || isNaN(n)) ? 'n/d' : Number(n).toLocaleString('es-MX', { maximumFractionDigits: 2 });\nconst esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\nfunction parseJSON(t) {\n  const s = String(t || '').replace(/```json|```/g, '').trim();\n  const a = s.indexOf('{'), b = s.lastIndexOf('}');\n  if (a < 0 || b < a) throw new Error('sin JSON');\n  return JSON.parse(s.slice(a, b + 1));\n}\nfunction traza(st, rol, version, estado, entrada, salida, extra = {}) {\n  st.trazas.push({ caso_id: st.caso_id || 'PENDIENTE', paso: st.trazas.length + 1, rol, version: version || 0, estado,\n    skill: extra.skill || '', entrada: String(entrada || '').slice(0, 480), salida: String(salida || '').slice(0, 1400),\n    tokens_in_est: extra.ti || 0, tokens_out_est: extra.to || 0, costo_est_usd: usd(extra.ti || 0, extra.to || 0),\n    duracion_ms: extra.ms || 0, ejecucion_id: String($execution.id) });\n}\nfunction control(st, paso, prompt) {\n  // Loop de seguridad y costo: evaluar presupuesto ANTES de llamar al modelo.\n  const tin = estTok(prompt), reserva = st.limites.reserva_salida;\n  const usados = st.uso.tokens_in + st.uso.tokens_out;\n  const ok = st.uso.llamadas < st.limites.llamadas && (usados + tin + reserva) <= st.limites.tokens\n             && (st.uso.usd + usd(tin, reserva)) <= st.limites.usd;\n  if (!ok) {\n    st.detener = { motivo: 'presupuesto', paso };\n    traza(st, 'Orquestador', 0, 'detenido_presupuesto', `paso=${paso} llamadas=${st.uso.llamadas}/${st.limites.llamadas}`,\n      `tokens usados+próximos+reserva=${usados + tin + reserva} > límite ${st.limites.tokens} o USD > ${st.limites.usd}`);\n  } else {\n    traza(st, 'Orquestador', 0, 'presupuesto_ok', `paso=${paso}`, `tokens=${usados}+${tin}+${reserva}/${st.limites.tokens}; llamadas=${st.uso.llamadas}/${st.limites.llamadas}`);\n  }\n  st.presupuesto_ok = ok; st._t0 = Date.now(); st._tin = tin;\n  return ok;\n}\nfunction registrarLLM(st, rol, version, prompt, salida, skill) {\n  const ti = estTok(prompt), to = estTok(salida);\n  st.uso.llamadas += 1; st.uso.tokens_in += ti; st.uso.tokens_out += to; st.uso.usd = +(st.uso.usd + usd(ti, to)).toFixed(8);\n  traza(st, rol, version, 'llm_ok', prompt.slice(-480), salida, { ti, to, ms: Date.now() - (st._t0 || Date.now()), skill });\n}\n\n\nconst st = JSON.parse(JSON.stringify($('A4 v2 · preparar').first().json));\nconst _j = $input.first().json; const raw = typeof _j.text === 'string' ? _j.text : JSON.stringify(_j);\nregistrarLLM(st, 'A4 Revisor', st.iteracion, st.prompt_sistema + st.prompt_usuario, raw, st.skills.calidad.nombre + '@' + st.skills.calidad.version);\nlet r; try { r = parseJSON(raw); } catch (e) { r = { veredicto: 'devuelto', correcciones: ['Salida de revisión ilegible'], advertencias: [] }; }\n// Control del servidor: criterios verificables que el LLM no puede desactivar\nconst p = st.propuesta, c = st.calc, correcc = [];\nif (!st.esperado.includes(p.recomendacion)) correcc.push(`La recomendación \"${p.recomendacion}\" no es coherente con las políticas. Fallan: ${st.politicas.filter(x => !x.ok).map(x => x.id + ' (' + x.detalle + ')').join('; ') || 'ninguna'}. Recomendación válida: ${st.esperado.join(' o ')}.`);\nif (!/simulad/i.test(p.resumen)) correcc.push('El resumen debe incluir la frase \"resultado simulado\".');\nif (!p.resumen.includes(st.caso_id)) correcc.push(`El resumen debe incluir el folio ${st.caso_id}.`);\nconst permitidos = [st.fraccionamiento ? st.fraccionamiento.suma : null, c.monto_total, c.disponible, c.disponible_despues, c.precio_ref, st.req.precio_unitario, st.req.cantidad, c.consumo_pct_despues, c.variacion_precio_pct, Math.abs(c.variacion_precio_pct || 0), 15, 50000, 150000].filter(v => v !== null).map(Number);\nconst nums = (p.resumen.match(/\\d[\\d,]*(\\.\\d+)?/g) || []).map(s => Number(s.replace(/,/g, ''))).filter(n => n >= 100 && !String(n).startsWith('2026'));\nconst enTexto = n => (st.texto + ' ' + st.req.concepto).replace(/,/g, '').includes(String(n));\nconst ajenos = nums.filter(n => !permitidos.some(v => Math.abs(v - n) <= Math.max(1, Math.abs(v) * 0.005)) && !enTexto(n) && n !== Number(st.caso_id.slice(4)));\nif (ajenos.length) correcc.push(`El resumen contiene cifras que no provienen del cálculo: ${ajenos.join(', ')}. Usa solo monto ${c.monto_total} y disponible después ${c.disponible_despues}.`);\nif (!p.supuestos.length) correcc.push('Incluye al menos un supuesto explícito.');\nconst llmOk = String(r.veredicto).toLowerCase() === 'aprobado';\n// El servidor es la autoridad en políticas: se descartan correcciones del LLM que citan una política que SÍ se cumple (alucinación del revisor)\nconst pasadas = st.politicas.filter(x => x.ok).map(x => x.id);\nconst llmCorr = (r.correcciones || []).map(String);\nconst alucinadas = llmCorr.filter(t => pasadas.some(id => t.includes(id)) || /cotizaci/i.test(t) && pasadas.includes('POL-02'));\nconst cualitativas = llmCorr.filter(t => !alucinadas.includes(t) && !/POL-0\\d/.test(t));\nconst llmDevuelveValido = !llmOk && cualitativas.length > 0 && st.iteracion === 1;\nconst veredicto = (!correcc.length && !llmDevuelveValido) ? 'aprobado' : 'devuelto';\nconst todas = [...correcc, ...(llmDevuelveValido ? cualitativas : [])].slice(0, 5);\nst.revision = { version: st.iteracion, veredicto, correcciones: todas, advertencias: (r.advertencias || []).map(String).slice(0, 3),\n  override_servidor: (llmOk && correcc.length > 0) || (!llmOk && veredicto === 'aprobado'), veredicto_llm: llmOk ? 'aprobado' : 'devuelto', alucinaciones_descartadas: alucinadas.slice(0, 3) };\nif (alucinadas.length) traza(st, 'A4 Revisor', st.iteracion, 'control_servidor_descarta_alucinacion', 'correcciones del LLM', alucinadas.join(' | '));\ntraza(st, 'A4 Revisor', st.iteracion, 'revision_' + veredicto + (st.revision.override_servidor ? '_override_servidor' : ''), 'propuesta v' + st.iteracion, JSON.stringify(st.revision));\nst.correcciones = todas;\nst.fin_calidad = veredicto === 'aprobado' || st.iteracion >= st.limites.iteraciones_calidad;\nif (veredicto !== 'aprobado' && st.iteracion >= st.limites.iteraciones_calidad) { st.detener = { motivo: 'calidad', paso: 'A4 v' + st.iteracion }; traza(st, 'Orquestador', st.iteracion, 'detenido_calidad', 'máx. 3 iteraciones', 'Se agotó el límite del loop de calidad'); }\nreturn [{ json: st }];"
    }
   },
   {
-   "id": "aacfd4f6-1b84-4dcd-a378-62d608bf73cd",
+   "id": "f8cef52a-0db9-469b-ba6e-8791d5d267cb",
    "name": "¿Liberar tras v2?",
    "type": "n8n-nodes-base.if",
    "typeVersion": 2.2,
@@ -1035,7 +1035,7 @@
      },
      "conditions": [
       {
-       "id": "cda7f263-f97c-4107-b804-fd89161b848d",
+       "id": "ee381971-7b24-4295-9d9c-8ad22ee89366",
        "leftValue": "={{ $json.fin_calidad }}",
        "rightValue": "",
        "operator": {
@@ -1051,7 +1051,7 @@
    }
   },
   {
-   "id": "1d87321f-e414-450b-a863-7a50ca0e457a",
+   "id": "b67cd69d-c3b8-40cb-97d7-084d790f2553",
    "name": "A3 v3 · preparar",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -1064,7 +1064,7 @@
    }
   },
   {
-   "id": "6db18044-bdb9-4f03-82a5-e4bc567b8fc9",
+   "id": "63c7be7d-45bf-45e1-8be5-133df62212b2",
    "name": "Presupuesto A3 v3",
    "type": "n8n-nodes-base.if",
    "typeVersion": 2.2,
@@ -1082,7 +1082,7 @@
      },
      "conditions": [
       {
-       "id": "2a1a6cd5-3547-45f6-bb7e-7ad54a45d2b7",
+       "id": "0c2adff8-a390-44e2-968d-1b3cae350255",
        "leftValue": "={{ $json.presupuesto_ok }}",
        "rightValue": "",
        "operator": {
@@ -1098,7 +1098,7 @@
    }
   },
   {
-   "id": "ff4126b5-1eb8-4473-a048-144e16c5a505",
+   "id": "3a3d74d7-4129-4dfc-a93f-d17748e0148d",
    "name": "A3 v3 · Análisis (LLM)",
    "type": "@n8n/n8n-nodes-langchain.chainLlm",
    "typeVersion": 1.7,
@@ -1122,7 +1122,7 @@
    "waitBetweenTries": 1500
   },
   {
-   "id": "fffb608b-e5b7-48e4-980c-8878629752f2",
+   "id": "cf6a13a1-3447-4d01-8687-f113873991db",
    "name": "A3 v3 · validar",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -1135,7 +1135,7 @@
    }
   },
   {
-   "id": "d17463fe-28a1-410e-928b-c02eabd5dcf3",
+   "id": "fe9ecbc8-0760-47b6-8f6d-85970b4f3237",
    "name": "A4 v3 · preparar",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -1148,7 +1148,7 @@
    }
   },
   {
-   "id": "b90d69a4-73f5-4a15-ae26-c7186b41f3c6",
+   "id": "46603ab9-d922-4348-a1b3-420e00dd2f50",
    "name": "Presupuesto A4 v3",
    "type": "n8n-nodes-base.if",
    "typeVersion": 2.2,
@@ -1166,7 +1166,7 @@
      },
      "conditions": [
       {
-       "id": "13fe7dfa-9ab5-466c-a30a-4969bea2a17a",
+       "id": "d8b1948e-8689-4b6c-98e6-d9274d13cc09",
        "leftValue": "={{ $json.presupuesto_ok }}",
        "rightValue": "",
        "operator": {
@@ -1182,7 +1182,7 @@
    }
   },
   {
-   "id": "5f48ba1b-c896-4dc4-ac98-9278e19028b7",
+   "id": "d5050b05-82cc-4ebe-a99d-33d1eff4ffeb",
    "name": "A4 v3 · Revisor (LLM)",
    "type": "@n8n/n8n-nodes-langchain.chainLlm",
    "typeVersion": 1.7,
@@ -1206,7 +1206,7 @@
    "waitBetweenTries": 1500
   },
   {
-   "id": "be109942-a6b8-4df4-976c-1f5b1c40ce44",
+   "id": "69fe2a1f-2426-44af-8629-408fa5cad3cd",
    "name": "A4 v3 · veredicto",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -1215,11 +1215,11 @@
     200
    ],
    "parameters": {
-    "jsCode": "const TARIFA = { entrada: 0.15, salida: 0.60, fuente: 'OpenAI gpt-4o-mini, precio de lista USD/1M tokens (consultado 2026-11-04)' };\nconst estTok = s => Math.ceil(String(s || '').length / 4);\nconst usd = (ti, to) => +(((ti * TARIFA.entrada) + (to * TARIFA.salida)) / 1e6).toFixed(8);\nconst ahora = () => new Date().toISOString();\nconst fmt = n => (n === null || n === undefined || isNaN(n)) ? 'n/d' : Number(n).toLocaleString('es-MX', { maximumFractionDigits: 2 });\nconst esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\nfunction parseJSON(t) {\n  const s = String(t || '').replace(/```json|```/g, '').trim();\n  const a = s.indexOf('{'), b = s.lastIndexOf('}');\n  if (a < 0 || b < a) throw new Error('sin JSON');\n  return JSON.parse(s.slice(a, b + 1));\n}\nfunction traza(st, rol, version, estado, entrada, salida, extra = {}) {\n  st.trazas.push({ caso_id: st.caso_id || 'PENDIENTE', paso: st.trazas.length + 1, rol, version: version || 0, estado,\n    skill: extra.skill || '', entrada: String(entrada || '').slice(0, 480), salida: String(salida || '').slice(0, 1400),\n    tokens_in_est: extra.ti || 0, tokens_out_est: extra.to || 0, costo_est_usd: usd(extra.ti || 0, extra.to || 0),\n    duracion_ms: extra.ms || 0, ejecucion_id: String($execution.id) });\n}\nfunction control(st, paso, prompt) {\n  // Loop de seguridad y costo: evaluar presupuesto ANTES de llamar al modelo.\n  const tin = estTok(prompt), reserva = st.limites.reserva_salida;\n  const usados = st.uso.tokens_in + st.uso.tokens_out;\n  const ok = st.uso.llamadas < st.limites.llamadas && (usados + tin + reserva) <= st.limites.tokens\n             && (st.uso.usd + usd(tin, reserva)) <= st.limites.usd;\n  if (!ok) {\n    st.detener = { motivo: 'presupuesto', paso };\n    traza(st, 'Orquestador', 0, 'detenido_presupuesto', `paso=${paso} llamadas=${st.uso.llamadas}/${st.limites.llamadas}`,\n      `tokens usados+próximos+reserva=${usados + tin + reserva} > límite ${st.limites.tokens} o USD > ${st.limites.usd}`);\n  } else {\n    traza(st, 'Orquestador', 0, 'presupuesto_ok', `paso=${paso}`, `tokens=${usados}+${tin}+${reserva}/${st.limites.tokens}; llamadas=${st.uso.llamadas}/${st.limites.llamadas}`);\n  }\n  st.presupuesto_ok = ok; st._t0 = Date.now(); st._tin = tin;\n  return ok;\n}\nfunction registrarLLM(st, rol, version, prompt, salida, skill) {\n  const ti = estTok(prompt), to = estTok(salida);\n  st.uso.llamadas += 1; st.uso.tokens_in += ti; st.uso.tokens_out += to; st.uso.usd = +(st.uso.usd + usd(ti, to)).toFixed(8);\n  traza(st, rol, version, 'llm_ok', prompt.slice(-480), salida, { ti, to, ms: Date.now() - (st._t0 || Date.now()), skill });\n}\n\n\nconst st = JSON.parse(JSON.stringify($('A4 v3 · preparar').first().json));\nconst _j = $input.first().json; const raw = typeof _j.text === 'string' ? _j.text : JSON.stringify(_j);\nregistrarLLM(st, 'A4 Revisor', st.iteracion, st.prompt_sistema + st.prompt_usuario, raw, st.skills.calidad.nombre + '@' + st.skills.calidad.version);\nlet r; try { r = parseJSON(raw); } catch (e) { r = { veredicto: 'devuelto', correcciones: ['Salida de revisión ilegible'], advertencias: [] }; }\n// Control del servidor: criterios verificables que el LLM no puede desactivar\nconst p = st.propuesta, c = st.calc, correcc = [];\nif (!st.esperado.includes(p.recomendacion)) correcc.push(`La recomendación \"${p.recomendacion}\" no es coherente con las políticas. Fallan: ${st.politicas.filter(x => !x.ok).map(x => x.id + ' (' + x.detalle + ')').join('; ') || 'ninguna'}. Recomendación válida: ${st.esperado.join(' o ')}.`);\nif (!/simulad/i.test(p.resumen)) correcc.push('El resumen debe incluir la frase \"resultado simulado\".');\nif (!p.resumen.includes(st.caso_id)) correcc.push(`El resumen debe incluir el folio ${st.caso_id}.`);\nconst permitidos = [st.fraccionamiento ? st.fraccionamiento.suma : null, c.monto_total, c.disponible, c.disponible_despues, c.precio_ref, st.req.precio_unitario, st.req.cantidad, c.consumo_pct_despues, c.variacion_precio_pct, Math.abs(c.variacion_precio_pct || 0), 15, 50000, 150000].filter(v => v !== null).map(Number);\nconst nums = (p.resumen.match(/\\d[\\d,]*(\\.\\d+)?/g) || []).map(s => Number(s.replace(/,/g, ''))).filter(n => n >= 100 && !String(n).startsWith('2026'));\nconst enTexto = n => (st.texto + ' ' + st.req.concepto).replace(/,/g, '').includes(String(n));\nconst ajenos = nums.filter(n => !permitidos.some(v => Math.abs(v - n) <= Math.max(1, Math.abs(v) * 0.005)) && !enTexto(n) && n !== Number(st.caso_id.slice(4)));\nif (ajenos.length) correcc.push(`El resumen contiene cifras que no provienen del cálculo: ${ajenos.join(', ')}. Usa solo monto ${c.monto_total} y disponible después ${c.disponible_despues}.`);\nif (!p.supuestos.length) correcc.push('Incluye al menos un supuesto explícito.');\nconst llmOk = String(r.veredicto).toLowerCase() === 'aprobado';\nconst veredicto = (llmOk && !correcc.length) ? 'aprobado' : 'devuelto';\nconst todas = [...correcc, ...(llmOk ? [] : (r.correcciones || []).map(String))].slice(0, 5);\nst.revision = { version: st.iteracion, veredicto, correcciones: todas, advertencias: (r.advertencias || []).map(String).slice(0, 3), override_servidor: llmOk && correcc.length > 0 };\ntraza(st, 'A4 Revisor', st.iteracion, 'revision_' + veredicto + (st.revision.override_servidor ? '_override_servidor' : ''), 'propuesta v' + st.iteracion, JSON.stringify(st.revision));\nst.correcciones = todas;\nst.fin_calidad = veredicto === 'aprobado' || st.iteracion >= st.limites.iteraciones_calidad;\nif (veredicto !== 'aprobado' && st.iteracion >= st.limites.iteraciones_calidad) { st.detener = { motivo: 'calidad', paso: 'A4 v' + st.iteracion }; traza(st, 'Orquestador', st.iteracion, 'detenido_calidad', 'máx. 3 iteraciones', 'Se agotó el límite del loop de calidad'); }\nreturn [{ json: st }];"
+    "jsCode": "const TARIFA = { entrada: 0.15, salida: 0.60, fuente: 'OpenAI gpt-4o-mini, precio de lista USD/1M tokens (consultado 2026-11-04)' };\nconst estTok = s => Math.ceil(String(s || '').length / 4);\nconst usd = (ti, to) => +(((ti * TARIFA.entrada) + (to * TARIFA.salida)) / 1e6).toFixed(8);\nconst ahora = () => new Date().toISOString();\nconst fmt = n => (n === null || n === undefined || isNaN(n)) ? 'n/d' : Number(n).toLocaleString('es-MX', { maximumFractionDigits: 2 });\nconst esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\nfunction parseJSON(t) {\n  const s = String(t || '').replace(/```json|```/g, '').trim();\n  const a = s.indexOf('{'), b = s.lastIndexOf('}');\n  if (a < 0 || b < a) throw new Error('sin JSON');\n  return JSON.parse(s.slice(a, b + 1));\n}\nfunction traza(st, rol, version, estado, entrada, salida, extra = {}) {\n  st.trazas.push({ caso_id: st.caso_id || 'PENDIENTE', paso: st.trazas.length + 1, rol, version: version || 0, estado,\n    skill: extra.skill || '', entrada: String(entrada || '').slice(0, 480), salida: String(salida || '').slice(0, 1400),\n    tokens_in_est: extra.ti || 0, tokens_out_est: extra.to || 0, costo_est_usd: usd(extra.ti || 0, extra.to || 0),\n    duracion_ms: extra.ms || 0, ejecucion_id: String($execution.id) });\n}\nfunction control(st, paso, prompt) {\n  // Loop de seguridad y costo: evaluar presupuesto ANTES de llamar al modelo.\n  const tin = estTok(prompt), reserva = st.limites.reserva_salida;\n  const usados = st.uso.tokens_in + st.uso.tokens_out;\n  const ok = st.uso.llamadas < st.limites.llamadas && (usados + tin + reserva) <= st.limites.tokens\n             && (st.uso.usd + usd(tin, reserva)) <= st.limites.usd;\n  if (!ok) {\n    st.detener = { motivo: 'presupuesto', paso };\n    traza(st, 'Orquestador', 0, 'detenido_presupuesto', `paso=${paso} llamadas=${st.uso.llamadas}/${st.limites.llamadas}`,\n      `tokens usados+próximos+reserva=${usados + tin + reserva} > límite ${st.limites.tokens} o USD > ${st.limites.usd}`);\n  } else {\n    traza(st, 'Orquestador', 0, 'presupuesto_ok', `paso=${paso}`, `tokens=${usados}+${tin}+${reserva}/${st.limites.tokens}; llamadas=${st.uso.llamadas}/${st.limites.llamadas}`);\n  }\n  st.presupuesto_ok = ok; st._t0 = Date.now(); st._tin = tin;\n  return ok;\n}\nfunction registrarLLM(st, rol, version, prompt, salida, skill) {\n  const ti = estTok(prompt), to = estTok(salida);\n  st.uso.llamadas += 1; st.uso.tokens_in += ti; st.uso.tokens_out += to; st.uso.usd = +(st.uso.usd + usd(ti, to)).toFixed(8);\n  traza(st, rol, version, 'llm_ok', prompt.slice(-480), salida, { ti, to, ms: Date.now() - (st._t0 || Date.now()), skill });\n}\n\n\nconst st = JSON.parse(JSON.stringify($('A4 v3 · preparar').first().json));\nconst _j = $input.first().json; const raw = typeof _j.text === 'string' ? _j.text : JSON.stringify(_j);\nregistrarLLM(st, 'A4 Revisor', st.iteracion, st.prompt_sistema + st.prompt_usuario, raw, st.skills.calidad.nombre + '@' + st.skills.calidad.version);\nlet r; try { r = parseJSON(raw); } catch (e) { r = { veredicto: 'devuelto', correcciones: ['Salida de revisión ilegible'], advertencias: [] }; }\n// Control del servidor: criterios verificables que el LLM no puede desactivar\nconst p = st.propuesta, c = st.calc, correcc = [];\nif (!st.esperado.includes(p.recomendacion)) correcc.push(`La recomendación \"${p.recomendacion}\" no es coherente con las políticas. Fallan: ${st.politicas.filter(x => !x.ok).map(x => x.id + ' (' + x.detalle + ')').join('; ') || 'ninguna'}. Recomendación válida: ${st.esperado.join(' o ')}.`);\nif (!/simulad/i.test(p.resumen)) correcc.push('El resumen debe incluir la frase \"resultado simulado\".');\nif (!p.resumen.includes(st.caso_id)) correcc.push(`El resumen debe incluir el folio ${st.caso_id}.`);\nconst permitidos = [st.fraccionamiento ? st.fraccionamiento.suma : null, c.monto_total, c.disponible, c.disponible_despues, c.precio_ref, st.req.precio_unitario, st.req.cantidad, c.consumo_pct_despues, c.variacion_precio_pct, Math.abs(c.variacion_precio_pct || 0), 15, 50000, 150000].filter(v => v !== null).map(Number);\nconst nums = (p.resumen.match(/\\d[\\d,]*(\\.\\d+)?/g) || []).map(s => Number(s.replace(/,/g, ''))).filter(n => n >= 100 && !String(n).startsWith('2026'));\nconst enTexto = n => (st.texto + ' ' + st.req.concepto).replace(/,/g, '').includes(String(n));\nconst ajenos = nums.filter(n => !permitidos.some(v => Math.abs(v - n) <= Math.max(1, Math.abs(v) * 0.005)) && !enTexto(n) && n !== Number(st.caso_id.slice(4)));\nif (ajenos.length) correcc.push(`El resumen contiene cifras que no provienen del cálculo: ${ajenos.join(', ')}. Usa solo monto ${c.monto_total} y disponible después ${c.disponible_despues}.`);\nif (!p.supuestos.length) correcc.push('Incluye al menos un supuesto explícito.');\nconst llmOk = String(r.veredicto).toLowerCase() === 'aprobado';\n// El servidor es la autoridad en políticas: se descartan correcciones del LLM que citan una política que SÍ se cumple (alucinación del revisor)\nconst pasadas = st.politicas.filter(x => x.ok).map(x => x.id);\nconst llmCorr = (r.correcciones || []).map(String);\nconst alucinadas = llmCorr.filter(t => pasadas.some(id => t.includes(id)) || /cotizaci/i.test(t) && pasadas.includes('POL-02'));\nconst cualitativas = llmCorr.filter(t => !alucinadas.includes(t) && !/POL-0\\d/.test(t));\nconst llmDevuelveValido = !llmOk && cualitativas.length > 0 && st.iteracion === 1;\nconst veredicto = (!correcc.length && !llmDevuelveValido) ? 'aprobado' : 'devuelto';\nconst todas = [...correcc, ...(llmDevuelveValido ? cualitativas : [])].slice(0, 5);\nst.revision = { version: st.iteracion, veredicto, correcciones: todas, advertencias: (r.advertencias || []).map(String).slice(0, 3),\n  override_servidor: (llmOk && correcc.length > 0) || (!llmOk && veredicto === 'aprobado'), veredicto_llm: llmOk ? 'aprobado' : 'devuelto', alucinaciones_descartadas: alucinadas.slice(0, 3) };\nif (alucinadas.length) traza(st, 'A4 Revisor', st.iteracion, 'control_servidor_descarta_alucinacion', 'correcciones del LLM', alucinadas.join(' | '));\ntraza(st, 'A4 Revisor', st.iteracion, 'revision_' + veredicto + (st.revision.override_servidor ? '_override_servidor' : ''), 'propuesta v' + st.iteracion, JSON.stringify(st.revision));\nst.correcciones = todas;\nst.fin_calidad = veredicto === 'aprobado' || st.iteracion >= st.limites.iteraciones_calidad;\nif (veredicto !== 'aprobado' && st.iteracion >= st.limites.iteraciones_calidad) { st.detener = { motivo: 'calidad', paso: 'A4 v' + st.iteracion }; traza(st, 'Orquestador', st.iteracion, 'detenido_calidad', 'máx. 3 iteraciones', 'Se agotó el límite del loop de calidad'); }\nreturn [{ json: st }];"
    }
   },
   {
-   "id": "c68c01cb-4ec5-4def-aa13-86eff2a06ed5",
+   "id": "cac3581d-2bcd-44af-afd2-c765641964ab",
    "name": "Orquestador · cierre",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -1232,7 +1232,7 @@
    }
   },
   {
-   "id": "5f3b25dc-ff9c-4150-b48f-35c187a9d991",
+   "id": "4f7b7275-61bc-4abf-8301-62d67438d32d",
    "name": "Fila final del caso",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -1245,7 +1245,7 @@
    }
   },
   {
-   "id": "472b8c9b-f40a-45a8-8797-90a65ce6e12d",
+   "id": "96426d7c-806d-4abb-aabc-f7b30b0cbdbd",
    "name": "Actualizar caso",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -1281,7 +1281,7 @@
    }
   },
   {
-   "id": "019a3391-6139-4b7a-af3b-1ca1d94919c6",
+   "id": "255254b0-63f5-461d-a0b5-1ac0fa4ecd39",
    "name": "Filas de traza",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -1294,7 +1294,7 @@
    }
   },
   {
-   "id": "395aa4e8-fca7-4278-a849-0ea228117f03",
+   "id": "72a689b7-5e41-48bc-a9bd-0d30ad876036",
    "name": "Guardar trazas",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -1320,7 +1320,7 @@
    }
   },
   {
-   "id": "072edb9e-ae2b-41cf-bedd-d1fac1378723",
+   "id": "b0ca080a-4690-4e42-816d-323cbee4445e",
    "name": "Leer aprobadores",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -1357,7 +1357,7 @@
    "executeOnce": true
   },
   {
-   "id": "322f246b-090d-4c5a-b691-c463def5097a",
+   "id": "aae16a64-7cc4-4319-a2d3-132318aa9d09",
    "name": "Solicitud de aprobación",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -1370,7 +1370,7 @@
    }
   },
   {
-   "id": "811d2fa6-6d4a-402d-98f5-748ec9440416",
+   "id": "110d86dd-0413-4457-b504-1f6f25b5ee67",
    "name": "¿Pedir aprobación?",
    "type": "n8n-nodes-base.if",
    "typeVersion": 2.2,
@@ -1388,7 +1388,7 @@
      },
      "conditions": [
       {
-       "id": "9cd25b97-9835-40d9-ac4d-68316b1279c4",
+       "id": "1cd14543-d1c4-49ac-a24d-ac90c966e300",
        "leftValue": "={{ $json.pendiente }}",
        "rightValue": "",
        "operator": {
@@ -1404,7 +1404,7 @@
    }
   },
   {
-   "id": "c1b5fb5d-1f30-4579-9c74-50ccf06d8fa3",
+   "id": "8669174b-bd52-446a-9e8a-dcf16aadd597",
    "name": "Telegram · pedir aprobación",
    "type": "n8n-nodes-base.telegram",
    "typeVersion": 1.2,
@@ -1453,7 +1453,7 @@
    "onError": "continueRegularOutput"
   },
   {
-   "id": "8086ac66-8f21-4299-9a3b-7fa46bac5126",
+   "id": "b66d4ffa-52a9-4976-8541-4fa73b8c50e9",
    "name": "¿Avisar caso de voz?",
    "type": "n8n-nodes-base.if",
    "typeVersion": 2.2,
@@ -1471,7 +1471,7 @@
      },
      "conditions": [
       {
-       "id": "adbe3b16-a4ce-449c-bbd9-3ec2745d649c",
+       "id": "f9dc81eb-28b0-4dd9-8d9c-e4aa5811d111",
        "leftValue": "={{ $('Orquestador · cierre').first().json.canal === 'voz' }}",
        "rightValue": "",
        "operator": {
@@ -1487,7 +1487,7 @@
    }
   },
   {
-   "id": "761ae054-1f3c-4cae-b908-89bbd25525c1",
+   "id": "d5394980-6a36-479b-a4bd-7995ff4e6e12",
    "name": "Telegram · aviso de voz",
    "type": "n8n-nodes-base.telegram",
    "typeVersion": 1.2,
@@ -1513,7 +1513,7 @@
    "onError": "continueRegularOutput"
   },
   {
-   "id": "cda2fb7c-7080-431a-83d8-989eb546c30a",
+   "id": "d6fa1c5a-b1ac-4802-935f-c7de4440ebd5",
    "name": "Respuesta del orquestador",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
