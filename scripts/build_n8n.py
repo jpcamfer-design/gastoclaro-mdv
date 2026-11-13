@@ -88,6 +88,7 @@ def tg_send(wf, name, chat, text, pos, buttons=None, **extra):
         p["replyMarkup"] = "inlineKeyboard"
         p["inlineKeyboard"] = {"rows": [{"row": {"buttons": [
             {"text": t, "additionalFields": {"callback_data": cb}} for t, cb in buttons]}}]}
+    extra.setdefault('retryOnFail', True); extra.setdefault('maxTries', 3); extra.setdefault('waitBetweenTries', 2000)
     return wf.add(name, 'n8n-nodes-base.telegram', 1.2, p, pos, credentials=TG, **extra)
 
 
@@ -456,7 +457,7 @@ def build_orquestador():
         if (!st.esperado.includes(p.recomendacion)) correcc.push(`La recomendación "${p.recomendacion}" no es coherente con las políticas. Fallan: ${st.politicas.filter(x => !x.ok).map(x => x.id + ' (' + x.detalle + ')').join('; ') || 'ninguna'}. Recomendación válida: ${st.esperado.join(' o ')}.`);
         if (!/simulad/i.test(p.resumen)) correcc.push('El resumen debe incluir la frase "resultado simulado".');
         if (!p.resumen.includes(st.caso_id)) correcc.push(`El resumen debe incluir el folio ${st.caso_id}.`);
-        const permitidos = [st.fraccionamiento ? st.fraccionamiento.suma : null, c.monto_total, c.disponible, c.disponible_despues, c.precio_ref, st.req.precio_unitario, st.req.cantidad, c.consumo_pct_despues, c.variacion_precio_pct, Math.abs(c.variacion_precio_pct || 0), 15, 50000, 150000].filter(v => v !== null).map(Number);
+        const permitidos = [st.fraccionamiento ? st.fraccionamiento.suma : null, c.monto_total, c.disponible, c.disponible_despues, c.precio_ref, st.req.precio_unitario, st.req.cantidad, c.consumo_pct_despues, c.variacion_precio_pct, Math.abs(c.variacion_precio_pct || 0), 15, 50000, 150000].filter(v => v !== null).map(Number).flatMap(v => [v, Math.abs(v)]); // el resumen escribe negativos como $-3,900: se compara sin signo
         const nums = (p.resumen.match(/\d[\d,]*(\.\d+)?/g) || []).map(s => Number(s.replace(/,/g, ''))).filter(n => n >= 100 && !String(n).startsWith('2026'));
         const enTexto = n => (st.texto + ' ' + st.req.concepto).replace(/,/g, '').includes(String(n));
         const ajenos = nums.filter(n => !permitidos.some(v => Math.abs(v - n) <= Math.max(1, Math.abs(v) * 0.005)) && !enTexto(n) && n !== Number(st.caso_id.slice(4)));
@@ -498,7 +499,9 @@ def build_orquestador():
 
     cierre_x = last_x + 220
     code(w, 'Orquestador · cierre', js(r"""
-    const st = JSON.parse(JSON.stringify($input.first().json));
+    // Las salidas tempranas (guardrail de entrada) llegan con la fila de la Data Table, no con el estado: se recupera el estado.
+    const _in = $input.first().json;
+    const st = JSON.parse(JSON.stringify(_in && _in.uso ? _in : $('Orquestador · asignar folio').first().json));
     const m = st.detener && st.detener.motivo;
     const rec = st.propuesta && st.propuesta.recomendacion;
     let estado;
@@ -648,7 +651,7 @@ def build_entrada():
 
     X = 2200
     # nuevo
-    tg_send(w, 'Acuse de recibo', '={{ $json.chat_id }}', "=📥 Recibí tu solicitud. La procesan 4 agentes (Intake → Datos → Análisis → Revisor). Te aviso en unos segundos.", [X, 0])
+    tg_send(w, 'Acuse de recibo', '={{ $json.chat_id }}', "=📥 Recibí tu solicitud. La procesan 4 agentes (Intake → Datos → Análisis → Revisor). Te aviso en unos segundos.", [X, 0], onError='continueRegularOutput')
     code(w, 'Preparar caso', "const e=$('Autorizar y enrutar').first().json; return [{ json: { canal:'telegram', chat_id:e.chat_id, usuario:e.alias, texto:e.texto } }];", [X + 220, 0])
     w.add('Ejecutar orquestador', 'n8n-nodes-base.executeWorkflow', 1.2, {
         "workflowId": {"__rl": True, "mode": "id", "value": "__WF_ORQ__"}, "options": {"waitForSubWorkflow": True}}, [X + 440, 0])
@@ -761,13 +764,16 @@ def build_voz():
     dt_get(w, 'Trazas del caso', 'trazas', [("caso_id", "eq", "={{ $('Validar petición de voz').first().json.caso_id }}")], [770, 60], executeOnce=True)
     code(w, 'Respuesta consulta', r"""
     const id = $('Validar petición de voz').first().json.caso_id;
+    const NOMBRES = { 'POL-01': '(disponible presupuestal)', 'POL-02': '(faltan 2 cotizaciones)', 'POL-03': '(precio arriba de la referencia)', 'POL-04': '(categoría restringida)',
+      'POL-05': '(excede facultad de aprobación)', 'POL-06': '(urgencia crítica sin justificar)', 'POL-07': '(posible fraccionamiento: compras del mismo CC e ítem/proveedor en 7 días que juntas superan $50,000 sin 2 cotizaciones)' };
     const c = $('Consultar caso').all().map(i => i.json).find(x => x.caso_id === id);
     const tr = $input.all().map(i => i.json).filter(t => t.caso_id === id && !['presupuesto_ok', 'llm_ok'].includes(t.estado)).sort((a, b) => a.paso - b.paso)
       .map(t => `${t.paso}. ${t.rol}${t.version ? ' v' + t.version : ''}: ${t.estado.replace(/_/g, ' ')}`);
     if (!c) return [{ json: { encontrado: false, caso_id: id, mensaje: `No existe el folio ${id} en el registro. No inventes un estado.` } }];
     return [{ json: { encontrado: true, caso_id: c.caso_id, estado: c.estado, centro_costo: c.centro_costo, concepto: c.concepto, monto_total_mxn: c.monto_total,
       recomendacion: c.recomendacion, revision: c.veredicto, version: c.version, decision: (c.decision || 'sin decisión').replace(/ por .*\(/, ' ('), actualizado: c.updatedAt,
-      politicas_con_falla: JSON.parse(c.politicas || '[]').filter(p => !p.ok).map(p => p.id), recorrido_auditoria: tr.slice(0, 18), resultado: 'simulado' } }];
+      politicas_con_falla: JSON.parse(c.politicas || '[]').filter(p => !p.ok).map(p => p.id + ' ' + (NOMBRES[p.id] || '')),
+      motivo_documentado: String(c.resumen || '').slice(0, 600), recorrido_auditoria: tr.slice(0, 18), resultado: 'simulado' } }];
     """, [880, 160])
     code(w, 'Preparar caso de voz', "const v=$input.first().json; return [{ json: { canal:'voz', chat_id:'', usuario:'voz-publica', texto: v.texto } }];", [660, 320])
     w.add('Ejecutar orquestador (voz)', 'n8n-nodes-base.executeWorkflow', 1.2, {
@@ -856,11 +862,13 @@ def build_programadas():
     // Solo datos ficticios agregados o sin identificadores: sin chat_id, alias, ejecuciones ni textos libres largos.
     const mask = s => String(s || '').replace(/[\w.+-]+@[\w-]+\.[\w.]+/g, '[correo]').replace(/\d{7,}/g, '[num]').slice(0, 90);
     const casos = $('Todos los casos').all().map(i => i.json).filter(c => c.caso_id).map(c => ({
-      caso_id: c.caso_id, canal: c.canal, estado: c.estado, version: c.version, centro_costo: c.centro_costo, concepto: mask(c.concepto), item_id: c.item_id,
+      caso_id: c.caso_id, canal: c.canal, estado: c.estado, version: c.version, centro_costo: c.centro_costo, concepto: c.centro_costo ? mask(c.concepto) : '(texto libre no publicado)', item_id: c.item_id,
       cantidad: c.cantidad, precio_unitario: c.precio_unitario, precio_ref: c.precio_ref, variacion_precio: c.variacion_precio, monto_total: c.monto_total,
       disponible_despues: c.disponible_despues, urgencia: c.urgencia, recomendacion: c.recomendacion, veredicto: c.veredicto, iteraciones: c.iteraciones,
       decision: c.decision ? c.decision.replace(/ por .*\(/, ' (') : '', politicas: (() => { try { return JSON.parse(c.politicas || '[]'); } catch (e) { return []; } })(), creado: c.createdAt, decidido_en: c.decidido_en || null,
       llamadas_llm: c.llamadas_llm, tokens_in_est: c.tokens_in_est, tokens_out_est: c.tokens_out_est, costo_est_usd: c.costo_est_usd }));
+    // Filas cerradas por error (p. ej. caída a mitad del flujo) pueden traer nulos: los numéricos se normalizan a 0 para cumplir el esquema.
+    for (const c of casos) for (const k of ['version', 'cantidad', 'precio_unitario', 'precio_ref', 'variacion_precio', 'monto_total', 'disponible_despues', 'iteraciones', 'llamadas_llm', 'tokens_in_est', 'tokens_out_est', 'costo_est_usd']) c[k] = Number(c[k] || 0);
     const det = t => /revision|politicas|simulacion|fraccion|cierre|propuesta|aprob|rechaz|detenido|skill/.test(t.estado) ? mask(String(t.salida || '').replace(/"(chat|usuario)[^,}]*/g, '')).slice(0, 90) : '';
     const trazas = $('Todas las trazas').all().map(i => i.json).filter(t => t.caso_id).map(t => ({ caso_id: t.caso_id, paso: t.paso, rol: t.rol, version: t.version, estado: t.estado, skill: t.skill, detalle: det(t), duracion_ms: t.duracion_ms,
       tokens_in_est: t.tokens_in_est, tokens_out_est: t.tokens_out_est, costo_est_usd: t.costo_est_usd, ts: t.createdAt }));
