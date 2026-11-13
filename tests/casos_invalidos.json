@@ -1,0 +1,42 @@
+{
+ "generado": "2026-11-13T20:30:00Z",
+ "modo": "SIMULADO",
+ "presupuesto": [
+  {
+   "centro_costo": "CC-110",
+   "presupuesto_mensual": 480000,
+   "comprometido": 312400
+  }
+ ],
+ "casos": [
+  {
+   "caso_id": "GAS-0901",
+   "estado": "aprobado_simulado",
+   "veredicto": "devuelto",
+   "version": 1,
+   "monto_total": 30000,
+   "cantidad": 2,
+   "precio_unitario": 14000,
+   "llamadas_llm": 4,
+   "costo_est_usd": 0.0004
+  },
+  {
+   "caso_id": "GAS-0902",
+   "estado": "pagado",
+   "veredicto": "aprobado",
+   "version": 1,
+   "monto_total": 1000,
+   "cantidad": 1,
+   "precio_unitario": 1000,
+   "llamadas_llm": 4,
+   "costo_est_usd": 0.0004,
+   "chat_id": "123456789"
+  }
+ ],
+ "trazas": [
+  {
+   "caso_id": "GAS-0999",
+   "paso": 1
+  }
+ ]
+}
