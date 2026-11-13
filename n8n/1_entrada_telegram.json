@@ -2,7 +2,7 @@
  "name": "GastoClaro · 1 Entrada Telegram",
  "nodes": [
   {
-   "id": "8d0a4a17-35b6-4622-86a2-a087bc04d50f",
+   "id": "83c86616-74fb-47d6-b026-9af6ca41a5cf",
    "name": "Telegram Trigger",
    "type": "n8n-nodes-base.telegramTrigger",
    "typeVersion": 1.2,
@@ -23,10 +23,10 @@
      "name": "Telegram GastoClaro"
     }
    },
-   "webhookId": "6c119ea2-3be5-4a75-8e84-341d1c6d6ffa"
+   "webhookId": "8a7b2b61-117a-4474-b4a7-64f6ef15eaa4"
   },
   {
-   "id": "7a17bd74-b0b0-4ae6-ae03-19e0367664af",
+   "id": "9a3a619a-af43-4d7d-a0e8-05df986a7b6a",
    "name": "Normalizar evento",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -39,7 +39,7 @@
    }
   },
   {
-   "id": "c0f89c93-a16a-4853-991e-e2c3fb9c7eeb",
+   "id": "b7c25e82-1b96-4053-80d0-380d23d8a852",
    "name": "Buscar evento (deduplicación)",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -71,7 +71,7 @@
    "alwaysOutputData": true
   },
   {
-   "id": "a952989c-28dd-4fe6-9492-7acbd04c8756",
+   "id": "06e198e2-8f78-4fd2-8b6d-c4723236de3f",
    "name": "¿Evento nuevo?",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -84,7 +84,7 @@
    }
   },
   {
-   "id": "7f2c05f5-c237-4112-8c84-290d47182106",
+   "id": "f7b3bdc6-a11c-4dd9-b976-0372bac029d4",
    "name": "Nuevo evento",
    "type": "n8n-nodes-base.if",
    "typeVersion": 2.2,
@@ -102,7 +102,7 @@
      },
      "conditions": [
       {
-       "id": "4ca7ab96-7b25-460f-8ef4-fcec40f12f46",
+       "id": "ec2501b9-32e6-43d6-a001-c9875fa86e8b",
        "leftValue": "={{ !$json.duplicado }}",
        "rightValue": "",
        "operator": {
@@ -118,7 +118,7 @@
    }
   },
   {
-   "id": "6a618d4e-be7d-45f5-b49f-adc11de1ebd6",
+   "id": "8b6b27c3-6551-4299-9b4b-8a9b1ebbd1c9",
    "name": "Fila evento",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -131,7 +131,7 @@
    }
   },
   {
-   "id": "9ebc3603-b847-4220-94de-b395fa6b3551",
+   "id": "42885458-52dc-48b2-b232-ce38aea7054c",
    "name": "Registrar evento",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -157,7 +157,7 @@
    }
   },
   {
-   "id": "a010ae37-c48c-4e40-8e1a-9e9371be530b",
+   "id": "d17c6f31-ed85-4347-97c4-2e48467c7a0d",
    "name": "Buscar usuario autorizado",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -189,7 +189,7 @@
    "alwaysOutputData": true
   },
   {
-   "id": "b4bcff52-9581-49ef-a0ea-ccd956f77a66",
+   "id": "ca909108-2222-4a37-816e-5ab5bdc0a80a",
    "name": "Autorizar y enrutar",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -202,7 +202,7 @@
    }
   },
   {
-   "id": "2d78377a-4146-44b7-ac07-b32844549fad",
+   "id": "0a674bfd-ecb6-478e-b810-7f4b02c2fa75",
    "name": "Enrutar",
    "type": "n8n-nodes-base.switch",
    "typeVersion": 3.2,
@@ -223,7 +223,7 @@
         "combinator": "and",
         "conditions": [
          {
-          "id": "0141d215-bf85-47f6-8bb4-bfa9dab51c1a",
+          "id": "842163d2-ff9f-44bf-ac5f-8b92ab28ff02",
           "leftValue": "={{ $json.ruta }}",
           "rightValue": "nuevo",
           "operator": {
@@ -246,7 +246,7 @@
         "combinator": "and",
         "conditions": [
          {
-          "id": "67d8369b-bf20-4add-9649-471b18da5cca",
+          "id": "0a5dba74-309d-49da-8c0c-5bfcc6d36c15",
           "leftValue": "={{ $json.ruta }}",
           "rightValue": "estado",
           "operator": {
@@ -269,7 +269,7 @@
         "combinator": "and",
         "conditions": [
          {
-          "id": "68919576-842c-4367-9802-8fea98d565ba",
+          "id": "73458e73-cbd6-4cfa-b8a8-a8555949cba1",
           "leftValue": "={{ $json.ruta }}",
           "rightValue": "decision",
           "operator": {
@@ -292,7 +292,7 @@
         "combinator": "and",
         "conditions": [
          {
-          "id": "8275762e-5491-44d4-8e17-701694be25ab",
+          "id": "b69ab7b3-d44c-4e1e-83ef-ed5d505d0e22",
           "leftValue": "={{ $json.ruta }}",
           "rightValue": "ayuda",
           "operator": {
@@ -315,7 +315,7 @@
         "combinator": "and",
         "conditions": [
          {
-          "id": "6d81bd5e-3cee-4e06-809b-c51d9e299419",
+          "id": "327d23c0-7cc0-4fee-bbde-3ec4ac5390d1",
           "leftValue": "={{ $json.ruta }}",
           "rightValue": "no_autorizado",
           "operator": {
@@ -337,7 +337,7 @@
    }
   },
   {
-   "id": "8aef6586-5172-440e-9a93-b8cba5a2b555",
+   "id": "63ae9762-a79c-4374-9cc5-3a3813985da2",
    "name": "Duplicado ignorado",
    "type": "n8n-nodes-base.noOp",
    "typeVersion": 1,
@@ -348,7 +348,7 @@
    "parameters": {}
   },
   {
-   "id": "324d97c0-592b-4496-acc9-06c1788894c4",
+   "id": "9385b341-8d41-4954-a425-6eec8bd9999d",
    "name": "Acuse de recibo",
    "type": "n8n-nodes-base.telegram",
    "typeVersion": 1.2,
@@ -370,10 +370,14 @@
      "id": "__CRED_TG__",
      "name": "Telegram GastoClaro"
     }
-   }
+   },
+   "onError": "continueRegularOutput",
+   "retryOnFail": true,
+   "maxTries": 3,
+   "waitBetweenTries": 2000
   },
   {
-   "id": "de0cda44-da23-4b0c-b776-9d24c5ba791d",
+   "id": "88e69fdc-87a1-4e79-a703-d6e1e26c5b88",
    "name": "Preparar caso",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -386,7 +390,7 @@
    }
   },
   {
-   "id": "de042d9e-cab0-4309-9137-a72446184d2d",
+   "id": "b4c26b64-bfca-4513-9b4d-847f60120e8f",
    "name": "Ejecutar orquestador",
    "type": "n8n-nodes-base.executeWorkflow",
    "typeVersion": 1.2,
@@ -406,7 +410,7 @@
    }
   },
   {
-   "id": "aed5ca3c-a743-477f-9591-be2b7f75be9c",
+   "id": "0e8f7325-5be2-42ef-98d8-e9f50bf88407",
    "name": "Resultado al solicitante",
    "type": "n8n-nodes-base.telegram",
    "typeVersion": 1.2,
@@ -428,10 +432,13 @@
      "id": "__CRED_TG__",
      "name": "Telegram GastoClaro"
     }
-   }
+   },
+   "retryOnFail": true,
+   "maxTries": 3,
+   "waitBetweenTries": 2000
   },
   {
-   "id": "60939521-3026-44a6-ac1e-5210997b6a05",
+   "id": "5dca645d-4df0-4ab9-a13c-16fc1ea9ae4e",
    "name": "Leer caso",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -463,7 +470,7 @@
    "alwaysOutputData": true
   },
   {
-   "id": "1013c40f-d151-438a-8ebc-5cd4e6194da7",
+   "id": "ff027356-826b-4690-9ae0-28dbb57c1c4a",
    "name": "Formatear estado",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -476,7 +483,7 @@
    }
   },
   {
-   "id": "98fe6512-6a67-441d-89a4-bee3fece1775",
+   "id": "4487c189-f2c5-4a21-bbf7-5fa400b51182",
    "name": "Responder estado",
    "type": "n8n-nodes-base.telegram",
    "typeVersion": 1.2,
@@ -498,10 +505,13 @@
      "id": "__CRED_TG__",
      "name": "Telegram GastoClaro"
     }
-   }
+   },
+   "retryOnFail": true,
+   "maxTries": 3,
+   "waitBetweenTries": 2000
   },
   {
-   "id": "a25d8129-6c36-4cac-b898-88e6617ad660",
+   "id": "d244d3fa-914f-4ea2-89bd-4825833f4a4d",
    "name": "Leer caso a decidir",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -533,7 +543,7 @@
    "alwaysOutputData": true
   },
   {
-   "id": "c6b978f6-cc94-49bf-be05-6041f219025d",
+   "id": "29b7fd3b-2251-4cdf-91a6-7f0861c541e3",
    "name": "Validar decisión (servidor)",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -546,7 +556,7 @@
    }
   },
   {
-   "id": "cdd4c623-e328-4477-9aea-ebbfe269ba1f",
+   "id": "57fa7ac1-8d9e-4310-bfcd-d341142c931f",
    "name": "¿Decisión válida?",
    "type": "n8n-nodes-base.if",
    "typeVersion": 2.2,
@@ -564,7 +574,7 @@
      },
      "conditions": [
       {
-       "id": "716e4338-1268-4625-ad0a-dd84f3c0021a",
+       "id": "618f2d1f-266e-443b-a084-145f656fac81",
        "leftValue": "={{ $json.ok }}",
        "rightValue": "",
        "operator": {
@@ -580,7 +590,7 @@
    }
   },
   {
-   "id": "e3e20660-a542-4079-a19c-1f03c3e6cdf8",
+   "id": "8cf9cb79-9d00-47b5-9f61-c99137c63065",
    "name": "Fila decisión",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -593,7 +603,7 @@
    }
   },
   {
-   "id": "a62a49cc-57e5-416b-a5e0-4241745ee949",
+   "id": "aa3457dd-9b3c-4b8f-a927-25d29e6b91e4",
    "name": "Guardar decisión",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -629,7 +639,7 @@
    }
   },
   {
-   "id": "49b5c69a-a5f0-4745-a902-81f1cc5b4be1",
+   "id": "1009fc7d-6cd0-499d-b32e-6cbbcb7f4f6d",
    "name": "Traza decisión",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -642,7 +652,7 @@
    }
   },
   {
-   "id": "e6068454-3d54-4a86-9993-6e1ace528185",
+   "id": "197a9a50-fdf1-4c5d-a9d1-c909f4e8de58",
    "name": "Guardar traza decisión",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -668,7 +678,7 @@
    }
   },
   {
-   "id": "a99c5b53-5d88-4ec7-9a6b-b77d14598e2d",
+   "id": "8d2cfa9d-8eb6-465f-bde6-ca7bc6e52bf1",
    "name": "Confirmar botón",
    "type": "n8n-nodes-base.telegram",
    "typeVersion": 1.2,
@@ -692,7 +702,7 @@
    "onError": "continueRegularOutput"
   },
   {
-   "id": "a063391b-8190-42bc-987f-b0fcce62c9fb",
+   "id": "c78e74cc-1ec6-4cdc-a63f-ea3edd25aa8a",
    "name": "Quitar botones",
    "type": "n8n-nodes-base.telegram",
    "typeVersion": 1.2,
@@ -718,7 +728,7 @@
    "onError": "continueRegularOutput"
   },
   {
-   "id": "7487eca0-976f-4b1d-b013-c45e516d5be9",
+   "id": "ef7b2cae-87bb-46a9-8760-c1845410b0ac",
    "name": "Avisar al solicitante",
    "type": "n8n-nodes-base.telegram",
    "typeVersion": 1.2,
@@ -741,10 +751,13 @@
      "name": "Telegram GastoClaro"
     }
    },
-   "onError": "continueRegularOutput"
+   "onError": "continueRegularOutput",
+   "retryOnFail": true,
+   "maxTries": 3,
+   "waitBetweenTries": 2000
   },
   {
-   "id": "df14ba27-ec79-49fc-ae05-ed2d8b941f48",
+   "id": "db601bdc-88ce-4852-8a24-72c9ece0fd05",
    "name": "Rechazar botón",
    "type": "n8n-nodes-base.telegram",
    "typeVersion": 1.2,
@@ -769,7 +782,7 @@
    "onError": "continueRegularOutput"
   },
   {
-   "id": "4b24ca01-1f0e-4b58-950d-9f50752d9b3e",
+   "id": "ca2402fd-a33e-4513-87c2-4191f653ee5d",
    "name": "Ayuda",
    "type": "n8n-nodes-base.telegram",
    "typeVersion": 1.2,
@@ -791,10 +804,13 @@
      "id": "__CRED_TG__",
      "name": "Telegram GastoClaro"
     }
-   }
+   },
+   "retryOnFail": true,
+   "maxTries": 3,
+   "waitBetweenTries": 2000
   },
   {
-   "id": "529da010-cd4f-48f3-8d0a-93215e6883be",
+   "id": "444d360a-3fa0-479a-ba43-e1617d5ab623",
    "name": "Sin permiso",
    "type": "n8n-nodes-base.telegram",
    "typeVersion": 1.2,
@@ -817,10 +833,13 @@
      "name": "Telegram GastoClaro"
     }
    },
-   "onError": "continueRegularOutput"
+   "onError": "continueRegularOutput",
+   "retryOnFail": true,
+   "maxTries": 3,
+   "waitBetweenTries": 2000
   },
   {
-   "id": "4f0cde46-4e0e-44a8-964b-2277e6d1dc6b",
+   "id": "344a2539-1c01-4d20-9903-75cea40d8790",
    "name": "Mensaje de corrección",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -833,7 +852,7 @@
    }
   },
   {
-   "id": "90a6c2f8-ac7f-4e3d-84cc-215797baca99",
+   "id": "9ad1de97-83f4-4716-92fd-275eb4418eee",
    "name": "Responder corrección",
    "type": "n8n-nodes-base.telegram",
    "typeVersion": 1.2,
@@ -855,7 +874,10 @@
      "id": "__CRED_TG__",
      "name": "Telegram GastoClaro"
     }
-   }
+   },
+   "retryOnFail": true,
+   "maxTries": 3,
+   "waitBetweenTries": 2000
   }
  ],
  "connections": {

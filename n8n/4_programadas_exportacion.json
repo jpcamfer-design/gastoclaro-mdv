@@ -2,7 +2,7 @@
  "name": "GastoClaro · 4 Tarea programada y exportación",
  "nodes": [
   {
-   "id": "92ab55f3-9289-4779-9dce-5d0d8e047a63",
+   "id": "d65addde-c0c5-4e4a-8296-01fef72b37b5",
    "name": "Cada hora",
    "type": "n8n-nodes-base.scheduleTrigger",
    "typeVersion": 1.2,
@@ -22,7 +22,7 @@
    }
   },
   {
-   "id": "81b4b8ba-1999-4285-b7d2-7da575233c0d",
+   "id": "18fb92d6-54a4-433d-8d1a-a709206b91f9",
    "name": "Casos pendientes",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -53,7 +53,7 @@
    "alwaysOutputData": true
   },
   {
-   "id": "644291f5-6937-4a72-a730-9f0476e25d3d",
+   "id": "afd7cb52-742a-4739-8753-079e328934d3",
    "name": "Detectar vencidos",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -66,7 +66,7 @@
    }
   },
   {
-   "id": "282ad438-17fb-4592-af11-3bc50566149b",
+   "id": "98d2d3ad-abfd-4b9b-9e16-bd7f507abfb0",
    "name": "Fila vencido",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -79,7 +79,7 @@
    }
   },
   {
-   "id": "98b817f4-78b3-43ba-a424-06dfdb5a47a4",
+   "id": "f8d53e7c-3006-4e37-9943-a0db7abb0f6e",
    "name": "Marcar expirado",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -115,7 +115,7 @@
    }
   },
   {
-   "id": "19169513-2979-4627-860f-5b326ea21329",
+   "id": "eb0b7133-8294-4dc7-bb32-6b241f261602",
    "name": "Cada día 8:00",
    "type": "n8n-nodes-base.scheduleTrigger",
    "typeVersion": 1.2,
@@ -136,7 +136,7 @@
    }
   },
   {
-   "id": "f0bd9df9-9904-4bc4-9f2c-b9a3ce4cccaa",
+   "id": "60bf31c4-187d-4202-b9ee-b8b994269dce",
    "name": "Casos para briefing",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -167,7 +167,7 @@
    "alwaysOutputData": true
   },
   {
-   "id": "6904d0ce-d092-48fa-bba4-22830d4bf1d7",
+   "id": "30dfee38-f44c-43de-9f10-c83a8fcf3328",
    "name": "Presupuesto para briefing",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -199,7 +199,7 @@
    "executeOnce": true
   },
   {
-   "id": "3734ccbb-5c5b-45f8-8376-c1fbac785831",
+   "id": "393b167d-7bbd-443e-b03c-d1d6b4a72a8c",
    "name": "Aprobadores",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -236,7 +236,7 @@
    "executeOnce": true
   },
   {
-   "id": "237e494a-d11a-4282-a154-d41a90fe9f38",
+   "id": "02cbd93e-716f-44ad-b52c-7394ba157dc6",
    "name": "Armar briefing",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -249,7 +249,7 @@
    }
   },
   {
-   "id": "071b166f-b82d-4ddb-9bcb-82530e930585",
+   "id": "a1b04814-4753-4006-80c5-bff8ff053b37",
    "name": "ElevenLabs · texto a voz",
    "type": "n8n-nodes-base.httpRequest",
    "typeVersion": 4.2,
@@ -284,7 +284,7 @@
    "onError": "continueErrorOutput"
   },
   {
-   "id": "8bebf95f-5e29-415e-ba57-03c5102121e8",
+   "id": "d70360c6-405d-4ed8-a6be-6fdb16821f13",
    "name": "Telegram · nota de voz",
    "type": "n8n-nodes-base.telegram",
    "typeVersion": 1.2,
@@ -313,7 +313,7 @@
    "onError": "continueRegularOutput"
   },
   {
-   "id": "c8cb7821-8258-41ac-a0af-ba696455702d",
+   "id": "4b5d97e9-c544-46a7-b774-296fa20ae5b6",
    "name": "Telegram · briefing en texto (respaldo)",
    "type": "n8n-nodes-base.telegram",
    "typeVersion": 1.2,
@@ -336,10 +336,13 @@
      "name": "Telegram GastoClaro"
     }
    },
-   "onError": "continueRegularOutput"
+   "onError": "continueRegularOutput",
+   "retryOnFail": true,
+   "maxTries": 3,
+   "waitBetweenTries": 2000
   },
   {
-   "id": "23f7bf06-39c2-4a33-9b85-74a4c4f9fe30",
+   "id": "6631042f-2b8b-40dc-995d-2a9ca63d0ffb",
    "name": "Webhook exportación",
    "type": "n8n-nodes-base.webhook",
    "typeVersion": 2,
@@ -360,10 +363,10 @@
      "name": "GastoClaro export (header)"
     }
    },
-   "webhookId": "8a057818-9966-433e-ab29-cedd9692c6ac"
+   "webhookId": "3eeec4c6-59cd-45e3-bc12-624d9510c4f0"
   },
   {
-   "id": "66073f7c-4348-45e0-ace5-5970fd6cfae2",
+   "id": "eb513ca9-90f1-4397-988d-481e93350525",
    "name": "Todos los casos",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -394,7 +397,7 @@
    "alwaysOutputData": true
   },
   {
-   "id": "d587ba69-237c-49f4-bd66-90773085b106",
+   "id": "0a401940-185a-4e3c-a095-60a4b1f6fe04",
    "name": "Todas las trazas",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -426,7 +429,7 @@
    "executeOnce": true
   },
   {
-   "id": "7420a5f7-1e3d-48ef-ae4a-af7f83acd84e",
+   "id": "2a848277-c37b-43c1-bc5e-b8a5bba98449",
    "name": "Presupuesto vigente",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -458,7 +461,7 @@
    "executeOnce": true
   },
   {
-   "id": "2d701d73-ba2d-42f2-83f5-50838b0025b7",
+   "id": "4155bead-5581-4049-8942-18221ca23b1b",
    "name": "Exportación sanitizada",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -467,12 +470,12 @@
     500
    ],
    "parameters": {
-    "jsCode": "// Solo datos ficticios agregados o sin identificadores: sin chat_id, alias, ejecuciones ni textos libres largos.\nconst mask = s => String(s || '').replace(/[\\w.+-]+@[\\w-]+\\.[\\w.]+/g, '[correo]').replace(/\\d{7,}/g, '[num]').slice(0, 90);\nconst casos = $('Todos los casos').all().map(i => i.json).filter(c => c.caso_id).map(c => ({\n  caso_id: c.caso_id, canal: c.canal, estado: c.estado, version: c.version, centro_costo: c.centro_costo, concepto: mask(c.concepto), item_id: c.item_id,\n  cantidad: c.cantidad, precio_unitario: c.precio_unitario, precio_ref: c.precio_ref, variacion_precio: c.variacion_precio, monto_total: c.monto_total,\n  disponible_despues: c.disponible_despues, urgencia: c.urgencia, recomendacion: c.recomendacion, veredicto: c.veredicto, iteraciones: c.iteraciones,\n  decision: c.decision ? c.decision.replace(/ por .*\\(/, ' (') : '', politicas: (() => { try { return JSON.parse(c.politicas || '[]'); } catch (e) { return []; } })(), creado: c.createdAt, decidido_en: c.decidido_en || null,\n  llamadas_llm: c.llamadas_llm, tokens_in_est: c.tokens_in_est, tokens_out_est: c.tokens_out_est, costo_est_usd: c.costo_est_usd }));\nconst det = t => /revision|politicas|simulacion|fraccion|cierre|propuesta|aprob|rechaz|detenido|skill/.test(t.estado) ? mask(String(t.salida || '').replace(/\"(chat|usuario)[^,}]*/g, '')).slice(0, 90) : '';\nconst trazas = $('Todas las trazas').all().map(i => i.json).filter(t => t.caso_id).map(t => ({ caso_id: t.caso_id, paso: t.paso, rol: t.rol, version: t.version, estado: t.estado, skill: t.skill, detalle: det(t), duracion_ms: t.duracion_ms,\n  tokens_in_est: t.tokens_in_est, tokens_out_est: t.tokens_out_est, costo_est_usd: t.costo_est_usd, ts: t.createdAt }));\nconst presupuesto = $('Presupuesto vigente').all().map(i => i.json).filter(p => p.centro_costo).map(p => ({ centro_costo: p.centro_costo, nombre: p.nombre, presupuesto_mensual: p.presupuesto_mensual, comprometido: p.comprometido, periodo: p.periodo }));\nreturn [{ json: { generado: new Date().toISOString(), fuente: 'n8n Data Tables mdv_casos/mdv_trazas (exportación sanitizada)', modo: 'SIMULADO', ficticio: true, casos, trazas, presupuesto } }];"
+    "jsCode": "// Solo datos ficticios agregados o sin identificadores: sin chat_id, alias, ejecuciones ni textos libres largos.\nconst mask = s => String(s || '').replace(/[\\w.+-]+@[\\w-]+\\.[\\w.]+/g, '[correo]').replace(/\\d{7,}/g, '[num]').slice(0, 90);\nconst casos = $('Todos los casos').all().map(i => i.json).filter(c => c.caso_id).map(c => ({\n  caso_id: c.caso_id, canal: c.canal, estado: c.estado, version: c.version, centro_costo: c.centro_costo, concepto: c.centro_costo ? mask(c.concepto) : '(texto libre no publicado)', item_id: c.item_id,\n  cantidad: c.cantidad, precio_unitario: c.precio_unitario, precio_ref: c.precio_ref, variacion_precio: c.variacion_precio, monto_total: c.monto_total,\n  disponible_despues: c.disponible_despues, urgencia: c.urgencia, recomendacion: c.recomendacion, veredicto: c.veredicto, iteraciones: c.iteraciones,\n  decision: c.decision ? c.decision.replace(/ por .*\\(/, ' (') : '', politicas: (() => { try { return JSON.parse(c.politicas || '[]'); } catch (e) { return []; } })(), creado: c.createdAt, decidido_en: c.decidido_en || null,\n  llamadas_llm: c.llamadas_llm, tokens_in_est: c.tokens_in_est, tokens_out_est: c.tokens_out_est, costo_est_usd: c.costo_est_usd }));\n// Filas cerradas por error (p. ej. caída a mitad del flujo) pueden traer nulos: los numéricos se normalizan a 0 para cumplir el esquema.\nfor (const c of casos) for (const k of ['version', 'cantidad', 'precio_unitario', 'precio_ref', 'variacion_precio', 'monto_total', 'disponible_despues', 'iteraciones', 'llamadas_llm', 'tokens_in_est', 'tokens_out_est', 'costo_est_usd']) c[k] = Number(c[k] || 0);\nconst det = t => /revision|politicas|simulacion|fraccion|cierre|propuesta|aprob|rechaz|detenido|skill/.test(t.estado) ? mask(String(t.salida || '').replace(/\"(chat|usuario)[^,}]*/g, '')).slice(0, 90) : '';\nconst trazas = $('Todas las trazas').all().map(i => i.json).filter(t => t.caso_id).map(t => ({ caso_id: t.caso_id, paso: t.paso, rol: t.rol, version: t.version, estado: t.estado, skill: t.skill, detalle: det(t), duracion_ms: t.duracion_ms,\n  tokens_in_est: t.tokens_in_est, tokens_out_est: t.tokens_out_est, costo_est_usd: t.costo_est_usd, ts: t.createdAt }));\nconst presupuesto = $('Presupuesto vigente').all().map(i => i.json).filter(p => p.centro_costo).map(p => ({ centro_costo: p.centro_costo, nombre: p.nombre, presupuesto_mensual: p.presupuesto_mensual, comprometido: p.comprometido, periodo: p.periodo }));\nreturn [{ json: { generado: new Date().toISOString(), fuente: 'n8n Data Tables mdv_casos/mdv_trazas (exportación sanitizada)', modo: 'SIMULADO', ficticio: true, casos, trazas, presupuesto } }];"
    },
    "executeOnce": true
   },
   {
-   "id": "9759782f-d470-4669-82dd-4ed16ac59f9f",
+   "id": "6e2e9e0a-ba17-4ef5-b16d-811f4f7f30db",
    "name": "Responder exportación",
    "type": "n8n-nodes-base.respondToWebhook",
    "typeVersion": 1.1,
