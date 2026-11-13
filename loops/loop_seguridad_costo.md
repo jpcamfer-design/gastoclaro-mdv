@@ -15,7 +15,7 @@
 | Acción al exceder | No se llama al modelo; traza `detenido_presupuesto`; estado final `detenido_presupuesto`; mensaje al usuario |
 | Reconciliación | Los tokens **medidos** (tokenUsage reportado por el proveedor en la ejecución de n8n) se concilian en `costos/costos.csv` |
 
-**Prueba P09:** el workflow acepta `limite_tokens` desde la entrada de prueba; con 1 500 tokens el caso se detiene después de A1 sin llamar a A2.
+**Prueba P11:** con el límite forzado a 2 llamadas, GAS-0013 se detuvo después de A2 (`detenido_presupuesto`, 2 llamadas, ~$0.00017) sin llamar a A3.
 
 ## Autoevaluación (0–4)
 | Aspecto | Puntos | Razón |
