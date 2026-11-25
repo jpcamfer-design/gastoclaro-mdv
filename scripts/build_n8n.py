@@ -86,8 +86,9 @@ def tg_send(wf, name, chat, text, pos, buttons=None, **extra):
     p = {"chatId": chat, "text": text, "additionalFields": {"appendAttribution": False, "parse_mode": "HTML", "disable_web_page_preview": True}}
     if buttons:
         p["replyMarkup"] = "inlineKeyboard"
+        filas = buttons if isinstance(buttons[0], list) else [buttons]
         p["inlineKeyboard"] = {"rows": [{"row": {"buttons": [
-            {"text": t, "additionalFields": {"callback_data": cb}} for t, cb in buttons]}}]}
+            {"text": t, "additionalFields": {"callback_data": cb}} for t, cb in fila]}} for fila in filas]}
     extra.setdefault('retryOnFail', True); extra.setdefault('maxTries', 3); extra.setdefault('waitBetweenTries', 2000)
     return wf.add(name, 'n8n-nodes-base.telegram', 1.2, p, pos, credentials=TG, **extra)
 
@@ -295,7 +296,7 @@ def build_orquestador():
     const cat = $('Leer catálogo autorizado').all().map(i => i.json).filter(r => r.item_id);
     st.fuente_presupuesto = pres[0] || null;
     st.historial = $('Historial del CC').all().map(i => i.json).filter(h => h.caso_id && h.id !== st.row_id)
-      .map(h => ({ caso_id: h.caso_id, estado: h.estado, monto_total: +h.monto_total || 0, item_id: h.item_id || '', proveedor: h.proveedor || '', creado: h.createdAt }));
+      .map(h => ({ caso_id: h.caso_id, estado: h.estado, monto_total: +h.monto_total || 0, item_id: h.item_id || '', proveedor: h.proveedor || '', concepto: h.concepto || '', creado: h.createdAt }));
     st.catalogo = cat.map(c => ({ item_id: c.item_id, descripcion: c.descripcion, categoria: c.categoria, unidad: c.unidad, precio_ref: c.precio_ref, proveedor: c.proveedor }));
     if (!st.fuente_presupuesto) {
       st.detener = { motivo: 'aclaracion', paso: 'A2' }; st.faltantes = ['centro_costo_valido'];
@@ -419,9 +420,12 @@ def build_orquestador():
           { id: 'POL-06', tipo: 'devolucion', ok: r.urgencia !== 'critica' || /(paro|seguridad|accidente|l[ií]nea detenida|riesgo)/i.test(r.justificacion || ''), detalle: `urgencia ${r.urgencia}` } ];
         // POL-07 Detector de fraccionamiento: compras relacionadas (mismo CC + mismo ítem o proveedor) en 7 días que juntas superan el umbral de cotizaciones
         const prov = String(r.proveedor || (d.item ? d.item.proveedor : '')).toLowerCase();
+        // Sin ítem de catálogo se compara el concepto normalizado (sin acentos, mayúsculas ni plurales)
+        const norm = t => String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(Boolean).map(w => w.replace(/(es|s)$/, '')).join(' ');
         const hace7 = Date.now() - 7 * 864e5;
         const rel = (st.historial || []).filter(h => new Date(h.creado).getTime() >= hace7 && ['pendiente_aprobacion', 'aprobado_simulado', 'devuelto_solicitante'].includes(h.estado)
-          && ((d.item && h.item_id === d.item.item_id) || (prov && h.proveedor && h.proveedor.toLowerCase() === prov)));
+          && ((d.item && h.item_id === d.item.item_id) || (prov && h.proveedor && h.proveedor.toLowerCase() === prov)
+              || (!d.item && norm(h.concepto) && norm(h.concepto) === norm(r.concepto))));
         const suma = +(rel.reduce((a, h) => a + h.monto_total, 0) + c.monto_total).toFixed(2);
         const frac = rel.length > 0 && c.monto_total <= 50000 && suma > 50000 && r.cotizaciones < 2;
         st.fraccionamiento = frac ? { folios: rel.map(h => h.caso_id), suma } : null;
@@ -516,26 +520,67 @@ def build_orquestador():
     else estado = 'pendiente_aprobacion';
     st.estado = estado;
     st.aprobacion_expira = estado === 'pendiente_aprobacion' ? new Date(Date.now() + 24 * 3600 * 1000).toISOString() : '';
-    const r = st.req || {}, c = st.calc || {};
-    const etiqueta = { pendiente_aprobacion: '⏳ Pendiente de tu aprobación', requiere_aclaracion: '✍️ Requiere aclaración', rechazado_entrada: '⛔ Entrada rechazada', detenido_presupuesto: '🛑 Detenido por límite de costo',
-      error_controlado: '⚠️ Error controlado', detenido_calidad: '🛑 Detenido por calidad', rechazado_politica: '⛔ Rechazado por política', escalado_gerencia: '⬆️ Escalado a Gerencia (simulado)', devuelto_solicitante: '↩️ Devuelto al solicitante' }[estado];
-    let msg = `<b>GastoClaro · ${esc(st.caso_id)}</b>\n${etiqueta}\n`;
-    if (st.guardrail) msg += esc(st.guardrail.mensaje);
-    else if (estado === 'requiere_aclaracion') msg += 'Faltan datos: <b>' + esc((st.faltantes || []).join(', ')) + '</b>.\nEnvía /nuevo con la solicitud completa: centro de costo (CC-###), concepto, cantidad, precio unitario en MXN y justificación.';
-    else if (estado === 'detenido_presupuesto') msg += 'Se alcanzó el límite de tokens/llamadas del caso antes de terminar. No se hicieron más llamadas al modelo.';
-    else if (estado === 'error_controlado') msg += 'Un agente devolvió una salida inválida o no se pudo cargar una skill. El caso se detuvo sin resultado.';
+    const r = st.req || {}, c = st.calc || {}, d = st.datos || {}, f = st.forecast;
+    // Mensajes claros para personas: decisión primero, reglas con nombre humano, detalle bajo demanda (botón 🔎).
+    const NOM = { 'POL-01': 'Presupuesto', 'POL-02': 'Cotizaciones', 'POL-03': 'Precio', 'POL-04': 'Categoría', 'POL-05': 'Monto máximo', 'POL-06': 'Urgencia', 'POL-07': 'Compra partida' };
+    const cap = s => { s = String(s || ''); return s.charAt(0).toUpperCase() + s.slice(1); };
+    const money = n => '$' + fmt(Math.round(Number(n) || 0));
+    const pct = n => Math.round(Number(n) || 0) + '%';
+    const L = '━━━━━━━━━━━━━━';
+    const ccNom = d.presupuesto ? d.presupuesto.nombre : '';
+    const fallas = (st.politicas || []).filter(p => !p.ok);
+    // Una razón en lenguaje simple por cada regla que falla (calculada en código, no por el modelo)
+    const razon = id => ({
+      'POL-01': `No alcanza el presupuesto: faltarían <b>${money(-c.disponible_despues)}</b>.`,
+      'POL-02': 'Supera $50,000 y no trae 2 cotizaciones.',
+      'POL-03': `El precio está <b>${Math.round(c.variacion_precio_pct)}% arriba</b> del de referencia (${money(c.precio_ref)}).`,
+      'POL-04': 'Esta categoría no se compra por este canal.',
+      'POL-05': 'Supera $150,000: lo autoriza Gerencia de Planta.',
+      'POL-06': 'Urgencia crítica sin explicar el impacto en producción o seguridad.',
+      'POL-07': st.fraccionamiento ? `Esta semana ya se pidió lo mismo (${esc(st.fraccionamiento.folios.join(', '))}). Juntas suman <b>${money(st.fraccionamiento.suma)}</b> y con ese monto se necesitan 2 cotizaciones.` : 'Parece una compra partida.'
+    }[id] || id);
+    const REC = { aprobar: '✅ APROBAR', aprobar_con_condiciones: '✅ APROBAR con condiciones', rechazar: '⛔ RECHAZAR', devolver_al_solicitante: '↩️ DEVOLVER para corregir', escalar: '⬆️ ESCALAR a Gerencia' };
+    const PASO = { rechazar: st.fraccionamiento ? 'Pide una sola compra con 2 cotizaciones.' : 'No procede con estos datos.', devolver_al_solicitante: 'El solicitante corrige y vuelve a enviar.', escalar: 'Se envía a Gerencia (simulado).' };
+    const icono = { pendiente_aprobacion: '📋', rechazado_politica: st.fraccionamiento ? '🚨' : '⛔', devuelto_solicitante: '↩️', escalado_gerencia: '⬆️', requiere_aclaracion: '✍️', rechazado_entrada: '🛡️', detenido_presupuesto: '🛑', error_controlado: '⚠️', detenido_calidad: '🛑' }[estado] || '📋';
+    const titulo = `${icono} <b>${esc(st.caso_id)} · ${esc(cap(r.concepto || 'Solicitud'))}</b>`;
+    const pie = `<i>Simulado · revisado por ${st.uso.llamadas ? '4 agentes' : 'reglas del servidor'} · IA ${money0(st.uso.usd)}</i>`;
+    function money0(u) { return '$' + Number(u || 0).toFixed(4) + ' USD'; }
+    let msg;
+    if (st.guardrail) msg = `🛡️ <b>${esc(st.caso_id)} · Solicitud bloqueada</b>\n${L}\n${st.guardrail.codigo === 'inyeccion_bloqueada' ? 'El mensaje trae instrucciones para el sistema, no un gasto.\nNo se envió a la IA (0 consultas).' : esc(st.guardrail.mensaje)}\n${L}\n👉 Describe solo el gasto: centro de costo, qué, cuánto y por qué.`;
+    else if (estado === 'requiere_aclaracion') { const F = { centro_costo: 'centro de costo', concepto: 'qué necesitas', cantidad: 'cantidad', precio_unitario: 'precio unitario', justificacion: 'para qué es', urgencia: 'urgencia', centro_costo_valido: 'un centro de costo válido (CC-###)' };
+      msg = `✍️ <b>${esc(st.caso_id)} · Me faltan datos</b>\n${L}\n${(st.faltantes || []).map(x => '• ' + esc(F[x] || x)).join('\n')}\n${L}\n👉 Ejemplo: /nuevo CC-110 20 rodamientos a $190, urgencia alta, vibración en línea 2`; }
+    else if (estado === 'detenido_presupuesto') msg = `🛑 <b>${esc(st.caso_id)} · Detenido por límite de costo</b>\n${L}\nEl caso llegó al tope de consultas de IA permitido y se detuvo sin gastar más.\n${L}\n${pie}`;
+    else if (estado === 'error_controlado') msg = `⚠️ <b>${esc(st.caso_id)} · No pude completar el análisis</b>\nUn agente respondió algo inválido; el caso se detuvo sin resultado.\n${pie}`;
+    else if (estado === 'detenido_calidad') msg = `🛑 <b>${esc(st.caso_id)} · ${esc(cap(r.concepto))}</b>\n${L}\nEl revisor no aprobó la propuesta después de 3 intentos.\nPor seguridad no se envía a aprobación: revísalo a mano.\n${L}\n${pie}`;
     else {
-      msg += `${esc(r.concepto)} · ${esc(r.cantidad)} × $${fmt(r.precio_unitario)}\nMonto: <b>$${fmt(c.monto_total)} MXN</b> · CC ${esc(r.centro_costo)}\nDisponible después: $${fmt(c.disponible_despues)} (${fmt(c.consumo_pct_despues)}% consumido)\n`;
-      if (st.propuesta) msg += `Recomendación A3 v${st.propuesta.version}: <b>${esc(st.propuesta.recomendacion)}</b>\n${esc(st.propuesta.resumen)}\n`;
-      const fallas = (st.politicas || []).filter(p => !p.ok);
-      msg += fallas.length ? 'Políticas con observación: ' + fallas.map(p => esc(p.id)).join(', ') + '\n' : 'Políticas POL-01 a POL-07: OK\n';
-      if (st.fraccionamiento) msg += `🚨 <b>Alerta de fraccionamiento:</b> con ${esc(st.fraccionamiento.folios.join(', '))} suman $${fmt(st.fraccionamiento.suma)} MXN en 7 días sin 2 cotizaciones.\n`;
-      if (st.forecast) { const f = st.forecast, ic = { verde: '🟢', amarillo: '🟡', rojo: '🔴' }[f.semaforo];
-        msg += `${ic} <b>Simulador de cierre</b> ${esc(r.centro_costo)}: hoy ${f.consumo_hoy_pct}% → si apruebas ${f.consumo_si_apruebas_pct}% → cierre proyectado ${f.cierre_proyectado_pct}%` + (f.dia_agotamiento ? ` · se agota el día ${f.dia_agotamiento}` : ' · no se agota este mes') + '\n'; }
-      msg += `Revisión A4: ${esc(st.revision ? st.revision.veredicto : 'n/d')} (iteraciones: ${st.iteracion})`;
+      const lineas = [titulo, L, `💰 <b>${money(c.monto_total)}</b>  (${esc(r.cantidad)} × ${money(r.precio_unitario)})`];
+      if (f) lineas.push(`📊 Presupuesto ${esc(ccNom || r.centro_costo)}: ${pct(f.consumo_hoy_pct)} → <b>${pct(f.consumo_si_apruebas_pct)}</b>${f.cierre_proyectado_pct > 100 ? ' 🔴' : f.cierre_proyectado_pct >= 85 ? ' 🟡' : ''}`);
+      lineas.push(fallas.length ? `🛡️ Reglas: <b>${7 - fallas.length} de 7 cumplen</b>` : '🛡️ Reglas: <b>7 de 7 cumplen</b>');
+      for (const p of fallas) lineas.push(`${p.id === 'POL-07' ? '🚨' : '⚠️'} <b>${NOM[p.id] || p.id}:</b> ${razon(p.id)}`);
+      lineas.push(L, `🤖 Recomendación: <b>${REC[rec] || esc(rec)}</b>`);
+      if (PASO[rec]) lineas.push(`👉 ${PASO[rec]}`);
+      lineas.push(pie);
+      msg = lineas.join('\n');
     }
-    msg += `\n<i>Resultado simulado · ${st.uso.llamadas} llamadas IA · ~$${st.uso.usd.toFixed(5)} USD</i>`;
     st.mensaje = msg;
+    // Detalle (botón 🔎): se guarda con el caso para responder sin recalcular
+    const pasos = st.trazas.filter(t => /requerimiento|datos_verificados|sin_item|propuesta_v|revision_|cierre_|rechazado_guardrail/.test(t.estado))
+      .map(t => `${t.rol}${t.version ? ' v' + t.version : ''}: ${t.estado.replace(/_/g, ' ').replace('revision devuelto override servidor', 'devuelta (control del servidor)').replace('revision devuelto', 'devuelta').replace('revision aprobado', 'aprobada')}`);
+    const det = [`🔎 <b>Detalle · ${esc(st.caso_id)}</b>`];
+    if (r.concepto) det.push('', '<b>Qué se pidió</b>', `${esc(r.cantidad)} × ${esc(r.concepto)} a ${money(r.precio_unitario)} · urgencia ${esc(r.urgencia || 'n/d')}`,
+      d.item ? `Catálogo ${esc(d.item.item_id)}: referencia ${money(c.precio_ref)} (${c.variacion_precio_pct > 0 ? '+' : ''}${c.variacion_precio_pct}%) · ${esc(d.item.proveedor)}` : 'Sin ítem de catálogo (no hay precio de referencia).');
+    if (c.monto_total) det.push('', `<b>Presupuesto ${esc(r.centro_costo)} ${esc(ccNom)}</b>`, `Disponible ${money(c.disponible)} → después ${money(c.disponible_despues)}`,
+      f ? `Cierre de mes proyectado: ${pct(f.cierre_proyectado_pct)}${f.dia_agotamiento ? ' · se agotaría el día ' + f.dia_agotamiento : ' · no se agota'}` : '');
+    if ((st.politicas || []).length) det.push('', '<b>Reglas</b>', st.politicas.map(p => (p.ok ? '✅ ' : '❌ ') + (NOM[p.id] || p.id)).join('\n'));
+    if (st.propuesta && (st.propuesta.supuestos || []).length) det.push('', '<b>Supuestos de la IA</b>', st.propuesta.supuestos.slice(0, 3).map(s => '• ' + esc(String(s).slice(0, 140))).join('\n'));
+    det.push('', '<b>Cómo se decidió</b>', pasos.map((p, i) => `${i + 1}. ${esc(p)}`).join('\n'),
+      '', `<b>Costo</b> ${st.uso.llamadas} consultas IA · ${st.uso.tokens_in + st.uso.tokens_out} tokens · ${money0(st.uso.usd)}`,
+      `🎬 <a href="https://jpcamfer-design.github.io/gastoclaro-mdv/?caso=${esc(st.caso_id)}#caja-negra">Ver en la caja negra</a>`);
+    st.detalle = det.filter(x => x !== '').join('\n').replace(/\n(<b>)/g, '\n\n$1').slice(0, 3900);
+    // Al solicitante: si queda pendiente, aviso corto (la tarjeta completa la recibe quien aprueba)
+    st.mensaje_solicitante = estado === 'pendiente_aprobacion'
+      ? `📤 <b>${esc(st.caso_id)}</b> enviado al Budget Owner\n${esc(cap(r.concepto))} · ${money(c.monto_total)} · recomendación: ${REC[rec] || esc(rec)}\nTe aviso cuando decida.`
+      : msg;
     traza(st, 'Orquestador', st.propuesta ? st.propuesta.version : 0, 'cierre_' + estado, 'estado final', `llamadas=${st.uso.llamadas} tokens_est=${st.uso.tokens_in}+${st.uso.tokens_out} usd_est=${st.uso.usd}`);
     return [{ json: st }];
     """), [cierre_x, 600])
@@ -547,7 +592,7 @@ def build_orquestador():
       cotizaciones: r.cotizaciones || 0, recomendacion: st.propuesta ? st.propuesta.recomendacion : '', veredicto: st.revision ? st.revision.veredicto : '',
       politicas: JSON.stringify((st.politicas || []).map(p => ({ id: p.id, ok: p.ok }))), iteraciones: st.iteracion || 0, aprobacion_expira: st.aprobacion_expira,
       llamadas_llm: st.uso.llamadas, tokens_in_est: st.uso.tokens_in, tokens_out_est: st.uso.tokens_out, costo_est_usd: st.uso.usd,
-      resumen: st.propuesta ? st.propuesta.resumen : (st.guardrail ? st.guardrail.codigo : (st.faltantes || []).join(',')) } }];
+      detalle: st.detalle || '', resumen: st.propuesta ? st.propuesta.resumen : (st.guardrail ? st.guardrail.codigo : (st.faltantes || []).join(',')) } }];
     """, [cierre_x + 220, 600])
     dt_update(w, 'Actualizar caso', 'casos', 'id', "={{ $('Orquestador · cierre').first().json.row_id }}", [cierre_x + 440, 600])
     code(w, 'Filas de traza', "return $('Orquestador · cierre').first().json.trazas.map(t => ({ json: t }));", [cierre_x + 660, 600])
@@ -558,17 +603,17 @@ def build_orquestador():
     const ap = $input.all().map(i => i.json).filter(u => u.chat_id && u.activo);
     const enviar = st.estado === 'pendiente_aprobacion' || st.canal === 'voz';
     return ap.map(u => ({ json: { enviar, chat_id: u.chat_id, pendiente: st.estado === 'pendiente_aprobacion',
-      texto: (st.canal === 'voz' ? '🎙️ Caso creado por voz\n' : '') + st.mensaje + (st.estado === 'pendiente_aprobacion' ? `\n\nVersión ${st.propuesta.version} · expira ${new Date(st.aprobacion_expira).toLocaleString('es-MX', { timeZone: 'America/Mexico_City' })}` : ''),
-      cb_ok: `d|ap|${st.caso_id}|${st.propuesta ? st.propuesta.version : 0}`, cb_no: `d|rc|${st.caso_id}|${st.propuesta ? st.propuesta.version : 0}` } }));
+      texto: (st.canal === 'voz' ? '🎙️ Caso creado por voz\n' : st.canal === 'invitado' ? '🙋 Solicitud de un invitado del salón\n' : '') + st.mensaje + (st.estado === 'pendiente_aprobacion' ? `\n\nVersión ${st.propuesta.version} · expira ${new Date(st.aprobacion_expira).toLocaleString('es-MX', { timeZone: 'America/Mexico_City' })}` : ''),
+      cb_ok: `d|ap|${st.caso_id}|${st.propuesta ? st.propuesta.version : 0}`, cb_no: `d|rc|${st.caso_id}|${st.propuesta ? st.propuesta.version : 0}`, cb_det: `v|${st.caso_id}` } }));
     """, [cierre_x + 1320, 600])
     iff(w, '¿Pedir aprobación?', '={{ $json.pendiente }}', [cierre_x + 1540, 600])
     tg_send(w, 'Telegram · pedir aprobación', '={{ $json.chat_id }}', '={{ $json.texto }}', [cierre_x + 1760, 500],
-            buttons=[("✅ Aprobar (simulado)", "={{ $json.cb_ok }}"), ("❌ Rechazar", "={{ $json.cb_no }}")], onError='continueRegularOutput')
+            buttons=[[("✅ Aprobar", "={{ $json.cb_ok }}"), ("❌ Rechazar", "={{ $json.cb_no }}")], [("🔎 Ver detalle", "={{ $json.cb_det }}")]], onError='continueRegularOutput')
     iff(w, '¿Avisar caso de voz?', "={{ $('Orquestador · cierre').first().json.canal === 'voz' }}", [cierre_x + 1760, 700])
-    tg_send(w, 'Telegram · aviso de voz', '={{ $json.chat_id }}', '={{ $json.texto }}', [cierre_x + 1980, 760], onError='continueRegularOutput')
+    tg_send(w, 'Telegram · aviso de voz', '={{ $json.chat_id }}', '={{ $json.texto }}', [cierre_x + 1980, 760], buttons=[("🔎 Ver detalle", "={{ $json.cb_det }}")], onError='continueRegularOutput')
     code(w, 'Respuesta del orquestador', r"""
     const st = $('Orquestador · cierre').first().json;
-    return [{ json: { caso_id: st.caso_id, estado: st.estado, mensaje_solicitante: st.mensaje, chat_solicitante: st.chat_solicitante, canal: st.canal,
+    return [{ json: { caso_id: st.caso_id, estado: st.estado, mensaje_solicitante: st.mensaje_solicitante, mensaje: st.mensaje, chat_solicitante: st.chat_solicitante, canal: st.canal,
       monto_total: st.calc ? st.calc.monto_total : null, recomendacion: st.propuesta ? st.propuesta.recomendacion : null, faltantes: st.faltantes || [], resultado: 'simulado' } }];
     """, [cierre_x + 2200, 600], executeOnce=True)
 
@@ -603,15 +648,30 @@ def build_orquestador():
 def build_entrada():
     w = WF('GastoClaro · 1 Entrada Telegram')
     w.add('Telegram Trigger', 'n8n-nodes-base.telegramTrigger', 1.2, {"updates": ["message", "callback_query"], "additionalFields": {}}, [0, 300], credentials=TG, webhookId=nid())
-    code(w, 'Normalizar evento', r"""
+    code(w, 'Evento crudo', r"""
     const u = $input.first().json;
     const cb = u.callback_query;
     const msg = cb ? cb.message : u.message;
     const ev = { event_key: 'tg-' + (u.update_id ?? (msg && msg.message_id)), chat_id: String(cb ? cb.from.id : (msg && msg.chat && msg.chat.id) || ''),
       texto: cb ? '' : String((msg && (msg.text || msg.caption)) || '').trim(), tiene_texto: !!(msg && msg.text), tipo: cb ? 'decision' : 'mensaje',
-      callback_id: cb ? cb.id : '', callback_data: cb ? String(cb.data || '') : '', message_id: msg ? msg.message_id : null, recibido: new Date().toISOString() };
+      callback_id: cb ? cb.id : '', callback_data: cb ? String(cb.data || '') : '', message_id: msg ? msg.message_id : null, recibido: new Date().toISOString(),
+      voz_file_id: (!cb && msg && msg.voice) ? msg.voice.file_id : '', voz_dur: (!cb && msg && msg.voice) ? Number(msg.voice.duration || 0) : 0 };
     return [{ json: ev }];
     """, [220, 300])
+    iff(w, '¿Nota de voz?', '={{ !!$json.voz_file_id && $json.voz_dur <= 60 }}', [220, 120])
+    w.add('Descargar audio', 'n8n-nodes-base.telegram', 1.2, {"resource": "file", "fileId": "={{ $json.voz_file_id }}", "additionalFields": {}}, [440, 60], credentials=TG, onError='continueRegularOutput')
+    w.add('ElevenLabs · voz a texto', 'n8n-nodes-base.httpRequest', 4.2, {
+        "method": "POST", "url": "https://api.elevenlabs.io/v1/speech-to-text", "authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth",
+        "sendBody": True, "contentType": "multipart-form-data", "bodyParameters": {"parameters": [
+            {"parameterType": "formBinaryData", "name": "file", "inputDataFieldName": "data"},
+            {"name": "model_id", "value": "scribe_v1"}, {"name": "language_code", "value": "spa"}]},
+        "options": {"timeout": 30000}}, [660, 60], credentials={"httpHeaderAuth": {"id": "__CRED_EL__", "name": "ElevenLabs API"}}, onError='continueRegularOutput')
+    code(w, 'Normalizar evento', r"""
+    // Si llegó nota de voz, el texto transcrito entra al mismo flujo que un mensaje escrito
+    const ev = { ...$('Evento crudo').first().json };
+    if (ev.voz_file_id) { const txt = String(($input.first().json || {}).text || '').trim(); if (txt) { ev.texto = txt; ev.tiene_texto = true; ev.por_voz = true; } }
+    return [{ json: ev }];
+    """, [880, 120])
     dt_get(w, 'Buscar evento (deduplicación)', 'eventos', [("event_key", "eq", "={{ $json.event_key }}")], [440, 300], limit=1)
     code(w, '¿Evento nuevo?', r"""
     const ev = $('Normalizar evento').first().json;
@@ -619,43 +679,61 @@ def build_entrada():
     return [{ json: { ...ev, duplicado: dup } }];
     """, [660, 300])
     iff(w, 'Nuevo evento', '={{ !$json.duplicado }}', [880, 300])
-    code(w, 'Fila evento', "const e=$input.first().json; return [{ json: { event_key: e.event_key, tipo: e.tipo, caso_id: (e.callback_data.split('|')[2]||'') } }];", [1100, 300])
+    code(w, 'Fila evento', "const e=$input.first().json; return [{ json: { event_key: e.event_key, tipo: e.tipo, caso_id: (e.callback_data.startsWith('v|') ? e.callback_data.split('|')[1] : (e.callback_data.split('|')[2]||'')) } }];", [1100, 300])
     dt_insert(w, 'Registrar evento', 'eventos', [1320, 300])
-    dt_get(w, 'Buscar usuario autorizado', 'usuarios', [("chat_id", "eq", "={{ $('Normalizar evento').first().json.chat_id }}")], [1540, 300], limit=1)
+    dt_get(w, 'Buscar usuario autorizado', 'usuarios', [("chat_id", "eq", "={{ $('Normalizar evento').first().json.chat_id }}"), ("chat_id", "eq", "MODO_DEMO")], [1540, 300], any_=True, executeOnce=True)
+    dt_get(w, 'Casos de invitados', 'casos', [("canal", "eq", "invitado")], [1650, 420], executeOnce=True)
     code(w, 'Autorizar y enrutar', r"""
     const ev = $('Normalizar evento').first().json;
-    const u = $input.all().map(i => i.json).find(x => x.chat_id === ev.chat_id && x.activo) || null;
+    const us = $('Buscar usuario autorizado').all().map(i => i.json);
+    let u = us.find(x => x.chat_id === ev.chat_id && x.activo) || null;
+    // Modo invitado (demo en clase): cualquiera puede pedir, nadie externo puede aprobar; límites para cuidar el costo
+    const demo = us.find(x => x.chat_id === 'MODO_DEMO' && x.activo);
+    let invitado = false, limite = '';
+    if (!u && demo) { u = { chat_id: ev.chat_id, alias: 'Invitado ' + ev.chat_id.slice(-3), rol: 'invitado', activo: true }; invitado = true; }
+    if (invitado) {
+      const gc = $('Casos de invitados').all().map(i => i.json).filter(c => c.caso_id);
+      const hoy = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' });
+      const deHoy = gc.filter(c => new Date(c.createdAt).toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' }) === hoy);
+      const maxPersona = Number((demo.alias || '').match(/(\d+)\/persona/)?.[1] || 2), maxDia = Number((demo.alias || '').match(/(\d+)\/d[ií]a/)?.[1] || 40);
+      if (gc.filter(c => c.chat_solicitante === ev.chat_id).length >= maxPersona) limite = 'persona';
+      else if (deHoy.length >= maxDia) limite = 'dia';
+    }
     let ruta = 'invalido', caso_id = '', accion = '', version = 0;
     const t = ev.texto;
     if (!u) ruta = 'no_autorizado';
-    else if (ev.tipo === 'decision') { const p = ev.callback_data.split('|'); if (p[0] === 'd' && ['ap', 'rc'].includes(p[1]) && /^GAS-\d{4}$/.test(p[2] || '')) { ruta = 'decision'; accion = p[1]; caso_id = p[2]; version = Number(p[3] || 0); } }
+    else if (ev.tipo === 'decision') { const p = ev.callback_data.split('|'); if (p[0] === 'd' && ['ap', 'rc'].includes(p[1]) && /^GAS-\d{4}$/.test(p[2] || '')) { ruta = 'decision'; accion = p[1]; caso_id = p[2]; version = Number(p[3] || 0); }
+      else if (p[0] === 'v' && /^GAS-\d{4}$/.test(p[1] || '')) { ruta = 'detalle'; caso_id = p[1]; } }
     else if (!ev.tiene_texto) ruta = 'sin_texto';
-    else if (/^\/(start|ayuda|help)/i.test(t)) ruta = 'ayuda';
-    else if (/^\/estado/i.test(t)) { const m = t.toUpperCase().match(/GAS-?\s?(\d{1,4})/); ruta = m ? 'estado' : 'estado_sin_folio'; caso_id = m ? 'GAS-' + m[1].padStart(4, '0') : ''; }
-    else if (/^\/nuevo/i.test(t)) ruta = 'nuevo';
+    // Lenguaje natural: los comandos siguen funcionando, pero no son obligatorios
+    else if (/^\/(start|ayuda|help)\b/i.test(t) || /^(hola|buen[oa]s|hey|qu[eé] onda|ayuda|help|men[uú]|qu[eé] (haces|puedes)|c[oó]mo funciona)\b[\s\S]{0,30}$/i.test(t)) ruta = 'ayuda';
+    else if (/^\/estado/i.test(t) || (/GAS-?\s?\d{1,4}/i.test(t) && t.length <= 80)) { const m = t.toUpperCase().match(/GAS-?\s?(\d{1,4})/); ruta = m ? 'estado' : 'estado_sin_folio'; caso_id = m ? 'GAS-' + m[1].padStart(4, '0') : ''; }
+    else if (/^\/nuevo/i.test(t) || t.length >= 12) ruta = 'nuevo';
     else ruta = 'invalido';
     const puedeSolicitar = u && ['solicitante', 'ambos'].includes(u.rol), puedeAprobar = u && ['aprobador', 'ambos'].includes(u.rol);
-    if (ruta === 'nuevo' && !puedeSolicitar) ruta = 'no_autorizado';
-    return [{ json: { ...ev, ruta, caso_id, accion, version, alias: u ? u.alias : '', rol: u ? u.rol : '', puedeAprobar: !!puedeAprobar } }];
+    if (ruta === 'nuevo' && !puedeSolicitar && !invitado) ruta = 'no_autorizado';
+    if (ruta === 'nuevo' && invitado && limite) ruta = 'limite_invitado';
+    return [{ json: { ...ev, ruta, caso_id, accion, version, alias: u ? u.alias : '', rol: u ? u.rol : '', puedeAprobar: !!puedeAprobar, invitado, limite } }];
     """, [1760, 300])
     w.add('Enrutar', 'n8n-nodes-base.switch', 3.2, {"rules": {"values": [
         {"conditions": {"options": {"caseSensitive": True, "typeValidation": "strict", "version": 2}, "combinator": "and",
                         "conditions": [{"id": nid(), "leftValue": "={{ $json.ruta }}", "rightValue": r, "operator": {"type": "string", "operation": "equals"}}]},
-         "renameOutput": True, "outputKey": r} for r in ["nuevo", "estado", "decision", "ayuda", "no_autorizado"]]},
+         "renameOutput": True, "outputKey": r} for r in ["nuevo", "estado", "decision", "ayuda", "no_autorizado", "detalle"]]},
         "options": {"fallbackOutput": "extra", "renameFallbackOutput": "otro"}}, [1980, 300])
-    w.chain('Telegram Trigger', 'Normalizar evento', 'Buscar evento (deduplicación)', '¿Evento nuevo?', 'Nuevo evento')
+    w.chain('Telegram Trigger', 'Evento crudo', '¿Nota de voz?', 'Descargar audio', 'ElevenLabs · voz a texto', 'Normalizar evento', 'Buscar evento (deduplicación)', '¿Evento nuevo?', 'Nuevo evento')
+    w.link('¿Nota de voz?', 'Normalizar evento', 1)
     w.link('Nuevo evento', 'Fila evento', 0)
     w.add('Duplicado ignorado', 'n8n-nodes-base.noOp', 1, {}, [1100, 480])
     w.link('Nuevo evento', 'Duplicado ignorado', 1)
-    w.chain('Fila evento', 'Registrar evento', 'Buscar usuario autorizado', 'Autorizar y enrutar', 'Enrutar')
+    w.chain('Fila evento', 'Registrar evento', 'Buscar usuario autorizado', 'Casos de invitados', 'Autorizar y enrutar', 'Enrutar')
 
     X = 2200
     # nuevo
-    tg_send(w, 'Acuse de recibo', '={{ $json.chat_id }}', "=📥 Recibí tu solicitud. La procesan 4 agentes (Intake → Datos → Análisis → Revisor). Te aviso en unos segundos.", [X, 0], onError='continueRegularOutput')
-    code(w, 'Preparar caso', "const e=$('Autorizar y enrutar').first().json; return [{ json: { canal:'telegram', chat_id:e.chat_id, usuario:e.alias, texto:e.texto } }];", [X + 220, 0])
+    tg_send(w, 'Acuse de recibo', '={{ $json.chat_id }}', "={{ ($json.por_voz ? '🎙️ Te entendí: «' + $json.texto.slice(0, 200) + '»\n' : '') + '📥 Recibida. 4 agentes la están revisando: ordenar → buscar precio → analizar → validar reglas. Te respondo en unos segundos.' }}", [X, 0], onError='continueRegularOutput')
+    code(w, 'Preparar caso', "const e=$('Autorizar y enrutar').first().json; return [{ json: { canal: e.invitado ? 'invitado' : 'telegram', chat_id:e.chat_id, usuario:e.alias, texto:e.texto } }];", [X + 220, 0])
     w.add('Ejecutar orquestador', 'n8n-nodes-base.executeWorkflow', 1.2, {
         "workflowId": {"__rl": True, "mode": "id", "value": "__WF_ORQ__"}, "options": {"waitForSubWorkflow": True}}, [X + 440, 0])
-    tg_send(w, 'Resultado al solicitante', '={{ $json.chat_solicitante }}', '={{ $json.mensaje_solicitante }}', [X + 660, 0])
+    tg_send(w, 'Resultado al solicitante', '={{ $json.chat_solicitante }}', '={{ $json.mensaje_solicitante }}', [X + 660, 0], buttons=[("🔎 Ver detalle", "={{ 'v|' + $json.caso_id }}")])
     w.link('Enrutar', 'Acuse de recibo', 0)
     w.chain('Acuse de recibo', 'Preparar caso', 'Ejecutar orquestador', 'Resultado al solicitante')
     # estado
@@ -667,11 +745,12 @@ def build_entrada():
     const fmt = n => Number(n || 0).toLocaleString('es-MX');
     let t;
     if (!c || (c.chat_solicitante !== e.chat_id && !e.puedeAprobar)) t = `No encontré el folio ${esc(e.caso_id)} entre tus casos.`;
-    else t = `<b>${esc(c.caso_id)}</b> · estado: <b>${esc(c.estado)}</b>\n${esc(c.concepto)}\nCC ${esc(c.centro_costo)} · $${fmt(c.monto_total)} MXN\nRecomendación: ${esc(c.recomendacion || 'n/d')} · Revisión: ${esc(c.veredicto || 'n/d')} (v${c.version})` +
-      (c.decision ? `\nDecisión: ${esc(c.decision)}` : '') + (c.aprobacion_expira && c.estado === 'pendiente_aprobacion' ? `\nExpira: ${new Date(c.aprobacion_expira).toLocaleString('es-MX', { timeZone: 'America/Mexico_City' })}` : '') + '\n<i>Resultado simulado</i>';
+    else { const E = { pendiente_aprobacion: '⏳ Esperando al Budget Owner', aprobado_simulado: '✅ Aprobado', rechazado_aprobador: '❌ Rechazado por el Budget Owner', rechazado_politica: '⛔ Rechazado por reglas', devuelto_solicitante: '↩️ Devuelto para corregir', escalado_gerencia: '⬆️ Escalado a Gerencia', requiere_aclaracion: '✍️ Faltan datos', rechazado_entrada: '🛡️ Bloqueado', detenido_calidad: '🛑 Detenido por calidad', detenido_presupuesto: '🛑 Límite de costo', error_controlado: '⚠️ Error controlado', expirado: '⌛ Expiró sin respuesta' };
+      t = `📌 <b>${esc(c.caso_id)} · ${esc(c.concepto)}</b>\n━━━━━━━━━━━━━━\nEstado: <b>${E[c.estado] || esc(c.estado)}</b>` + (c.monto_total ? `\n💰 $${fmt(c.monto_total)} · ${esc(c.centro_costo)}` : '') +
+      (c.estado === 'pendiente_aprobacion' && c.aprobacion_expira ? `\nVence: ${new Date(c.aprobacion_expira).toLocaleString('es-MX', { timeZone: 'America/Mexico_City', dateStyle: 'short', timeStyle: 'short' })}` : '') + '\n<i>Simulado</i>'; }
     return [{ json: { chat_id: e.chat_id, texto: t } }];
     """, [X + 220, 200])
-    tg_send(w, 'Responder estado', '={{ $json.chat_id }}', '={{ $json.texto }}', [X + 440, 200])
+    tg_send(w, 'Responder estado', '={{ $json.chat_id }}', '={{ $json.texto }}', [X + 440, 200], buttons=[("🔎 Ver detalle", "={{ 'v|' + $('Autorizar y enrutar').first().json.caso_id }}")])
     w.link('Enrutar', 'Leer caso', 1)
     w.chain('Leer caso', 'Formatear estado', 'Responder estado')
     # decision
@@ -690,6 +769,7 @@ def build_entrada():
     const ahora = new Date().toISOString();
     return [{ json: { ok, motivo, row_id: c ? c.id : null, caso_id: e.caso_id, aprobado, chat_aprobador: e.chat_id, chat_solicitante: c ? c.chat_solicitante : '',
       callback_id: e.callback_id, message_id: e.message_id, version: e.version, ahora,
+      concepto: c ? c.concepto : '', monto: c ? Number(c.monto_total || 0).toLocaleString('es-MX') : '0',
       nuevo_estado: aprobado ? 'aprobado_simulado' : 'rechazado_aprobador', decision: (aprobado ? 'aprobado' : 'rechazado') + ' por ' + e.alias + ' (v' + e.version + ')' } }];
     """, [X + 220, 400])
     iff(w, '¿Decisión válida?', '={{ $json.ok }}', [X + 440, 400])
@@ -704,10 +784,10 @@ def build_entrada():
         "additionalFields": {"text": "={{ $('Validar decisión (servidor)').first().json.aprobado ? 'Aprobado (simulado)' : 'Rechazado' }}"}}, [X + 1540, 340], credentials=TG, onError='continueRegularOutput')
     w.add('Quitar botones', 'n8n-nodes-base.telegram', 1.2, {"resource": "message", "operation": "editMessageText", "chatId": "={{ $('Validar decisión (servidor)').first().json.chat_aprobador }}",
         "messageId": "={{ $('Validar decisión (servidor)').first().json.message_id }}", "replyMarkup": "none",
-        "text": "={{ '✔️ ' + $('Validar decisión (servidor)').first().json.caso_id + ': ' + $('Validar decisión (servidor)').first().json.decision + '. Resultado simulado: no se emitió orden de compra.' }}",
-        "additionalFields": {}}, [X + 1760, 340], credentials=TG, onError='continueRegularOutput')
+        "text": "={{ (() => { const d = $('Validar decisión (servidor)').first().json; return (d.aprobado ? '✅ <b>APROBADO</b>' : '❌ <b>RECHAZADO</b>') + ' · ' + d.caso_id + '\\n' + d.concepto + ' · $' + d.monto + '\\n<i>Decidiste tú · simulado, no se emitió orden de compra</i>'; })() }}",
+        "additionalFields": {"parse_mode": "HTML"}}, [X + 1760, 340], credentials=TG, onError='continueRegularOutput')
     tg_send(w, 'Avisar al solicitante', "={{ $('Validar decisión (servidor)').first().json.chat_solicitante }}",
-            "={{ '📣 ' + $('Validar decisión (servidor)').first().json.caso_id + ': ' + $('Validar decisión (servidor)').first().json.decision + '. Resultado simulado.' }}", [X + 1980, 340], onError='continueRegularOutput')
+            "={{ (() => { const d = $('Validar decisión (servidor)').first().json; return (d.aprobado ? '✅ Tu solicitud <b>' + d.caso_id + '</b> fue <b>APROBADA</b>' : '❌ Tu solicitud <b>' + d.caso_id + '</b> fue <b>RECHAZADA</b>') + '\\n' + d.concepto + ' · $' + d.monto + '\\n<i>Simulado: no se emite orden de compra.</i>'; })() }}", [X + 1980, 340], onError='continueRegularOutput')
     w.add('Rechazar botón', 'n8n-nodes-base.telegram', 1.2, {"resource": "callback", "queryId": "={{ $json.callback_id }}",
         "additionalFields": {"text": "={{ $json.motivo }}", "show_alert": True}}, [X + 660, 520], credentials=TG, onError='continueRegularOutput')
     w.link('Enrutar', 'Leer caso a decidir', 2)
@@ -715,24 +795,41 @@ def build_entrada():
     w.link('¿Decisión válida?', 'Fila decisión', 0)
     w.link('¿Decisión válida?', 'Rechazar botón', 1)
     w.chain('Fila decisión', 'Guardar decisión', 'Traza decisión', 'Guardar traza decisión', 'Confirmar botón', 'Quitar botones', 'Avisar al solicitante')
+    # detalle (botón 🔎)
+    dt_get(w, 'Leer caso detalle', 'casos', [("caso_id", "eq", "={{ $json.caso_id }}")], [X, 1040], limit=1)
+    code(w, 'Formatear detalle', r"""
+    const e = $('Autorizar y enrutar').first().json;
+    const c = $input.all().map(i => i.json).find(x => x.caso_id === e.caso_id);
+    const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    let t;
+    if (!c || (c.chat_solicitante && c.chat_solicitante !== e.chat_id && !e.puedeAprobar)) t = 'No encontré ese folio entre tus casos.';
+    else if (c.detalle) t = c.detalle;
+    else t = `🔎 <b>Detalle · ${esc(c.caso_id)}</b>\n${esc(c.concepto)} · $${Number(c.monto_total || 0).toLocaleString('es-MX')} · ${esc(c.centro_costo)}\nEstado: ${esc(c.estado)} · recomendación: ${esc(c.recomendacion || 'n/d')} · ${c.llamadas_llm} consultas IA\n🎬 <a href="https://jpcamfer-design.github.io/gastoclaro-mdv/?caso=${esc(c.caso_id)}#caja-negra">Ver en la caja negra</a>`;
+    return [{ json: { chat_id: e.chat_id, texto: t, callback_id: e.callback_id } }];
+    """, [X + 220, 1040], executeOnce=True)
+    w.add('Confirmar detalle', 'n8n-nodes-base.telegram', 1.2, {"resource": "callback", "queryId": "={{ $json.callback_id }}", "additionalFields": {}}, [X + 440, 1040], credentials=TG, onError='continueRegularOutput')
+    tg_send(w, 'Enviar detalle', "={{ $('Formatear detalle').first().json.chat_id }}", "={{ $('Formatear detalle').first().json.texto }}", [X + 660, 1040])
+    w.link('Enrutar', 'Leer caso detalle', 5)
+    w.chain('Leer caso detalle', 'Formatear detalle', 'Confirmar detalle', 'Enviar detalle')
     # ayuda
-    ayuda = ("=<b>GastoClaro · Manufacturas del Valle</b> (empresa ficticia, modo SIMULADO)\n\n"
-             "/nuevo <i>solicitud</i> – crea un caso. Incluye centro de costo (CC-###), concepto, cantidad, precio unitario MXN sin IVA, urgencia y justificación.\n"
-             "Ej.: /nuevo CC-110 20 rodamientos 6205-2RS a $190 c/u, urgencia alta, vibración en transportador de la línea 2\n\n"
-             "/estado GAS-0001 – consulta un folio.\nAprobación: botones ✅/❌ (solo aprobadores, expiran en 24 h).")
+    ayuda = ("=👋 <b>Hola, soy GastoClaro</b>\nTe ayudo a pedir y aprobar gastos de planta (empresa ficticia, todo simulado).\n━━━━━━━━━━━━━━\n"
+             "🛒 <b>Para pedir algo</b>, escríbelo normal:\n<i>Necesito 20 rodamientos para la línea 2, CC-110, a $190 cada uno, urgente porque vibra el transportador</i>\n\n"
+             "🔎 <b>Para consultar</b>, escribe el folio:\n<i>GAS-0018</i>\n\n"
+             "✅ <b>Si apruebas</b>, te llegan las solicitudes con botones (vencen en 24 h).\n━━━━━━━━━━━━━━\n<i>También funcionan /nuevo, /estado y /ayuda.</i>")
     tg_send(w, 'Ayuda', '={{ $json.chat_id }}', ayuda, [X, 620])
     w.link('Enrutar', 'Ayuda', 3)
     tg_send(w, 'Sin permiso', '={{ $json.chat_id }}', "=⛔ Este chat no está autorizado para GastoClaro. Pide acceso al administrador del piloto.", [X, 760], onError='continueRegularOutput')
     w.link('Enrutar', 'Sin permiso', 4)
     code(w, 'Mensaje de corrección', r"""
     const e = $input.first().json;
-    const t = e.ruta === 'sin_texto' ? 'Solo proceso texto. Escribe tu solicitud con /nuevo (no fotos, audios ni stickers).'
-      : e.ruta === 'estado_sin_folio' ? 'Indica el folio, por ejemplo: /estado GAS-0001'
-      : e.tipo === 'decision' ? 'Botón no válido.' : 'No entendí el comando. Usa /nuevo, /estado GAS-0001 o /ayuda.';
+    const t = e.ruta === 'sin_texto' ? 'No pude entender eso 🎙️ Mándame una nota de voz de menos de 1 minuto o escríbelo.'
+      : e.ruta === 'estado_sin_folio' ? '¿Qué folio? Escríbelo así: GAS-0018'
+      : e.ruta === 'limite_invitado' ? (e.limite === 'persona' ? '🙌 ¡Gracias por probar GastoClaro! Cada invitado puede mandar 2 solicitudes y ya usaste las tuyas. Mira el resultado en la pantalla.' : '🙌 El demo de hoy ya llegó a su límite de solicitudes. ¡Gracias por participar!')
+      : e.tipo === 'decision' ? 'Botón no válido.' : 'No te entendí 🤔 Dime qué necesitas comprar (con centro de costo, cantidad y precio) o escribe un folio como GAS-0018.';
     return [{ json: { chat_id: e.chat_id, texto: t } }];
     """, [X, 900])
     tg_send(w, 'Responder corrección', '={{ $json.chat_id }}', '={{ $json.texto }}', [X + 220, 900])
-    w.link('Enrutar', 'Mensaje de corrección', 5)
+    w.link('Enrutar', 'Mensaje de corrección', 6)
     w.link('Mensaje de corrección', 'Responder corrección')
     return w
 
@@ -780,7 +877,7 @@ def build_voz():
         "workflowId": {"__rl": True, "mode": "id", "value": "__WF_ORQ__"}, "options": {"waitForSubWorkflow": True}}, [880, 320])
     code(w, 'Respuesta creación', r"""
     const r = $input.first().json;
-    const limpio = String(r.mensaje_solicitante || '').replace(/<[^>]+>/g, '');
+    const limpio = String(r.mensaje || r.mensaje_solicitante || '').replace(/<[^>]+>/g, '');
     return [{ json: { creado: true, caso_id: r.caso_id, estado: r.estado, monto_total_mxn: r.monto_total, recomendacion: r.recomendacion, faltantes: r.faltantes, resumen: limpio.slice(0, 700), resultado: 'simulado' } }];
     """, [1100, 320])
     code(w, 'Respuesta inválida', "const v=$input.first().json; return [{ json: { error: true, mensaje: v.error } }];", [660, 480])
@@ -826,16 +923,29 @@ def build_programadas():
       return { cc: p.centro_costo, nombre: p.nombre, pct: (p.comprometido + a + pe) / p.presupuesto_mensual * 100 }; }).sort((x, y) => y.pct - x.pct);
     const riesgo = ccs.filter(c => c.pct >= 85);
     const fraude = casos.filter(c => { try { return JSON.parse(c.politicas || '[]').some(p => p.id === 'POL-07' && !p.ok); } catch (e) { return false; } });
-    const ayer = Date.now() - 864e5;
+    const ayer = Date.now() - 864e5, semana = Date.now() - 7 * 864e5;
     const nuevos = casos.filter(c => new Date(c.createdAt).getTime() >= ayer).length;
+    const fraudeSem = fraude.filter(c => new Date(c.createdAt).getTime() >= semana);
     const fecha = new Date().toLocaleDateString('es-MX', { timeZone: 'America/Mexico_City', weekday: 'long', day: 'numeric', month: 'long' });
-    let t = `Buenos días. Este es tu resumen de GastoClaro del ${fecha}. `;
-    t += pend.length ? `Tienes ${pend.length} ${pend.length === 1 ? 'aprobación pendiente' : 'aprobaciones pendientes'} por ${n(montoPend)} pesos. ` : 'No tienes aprobaciones pendientes. ';
-    t += `En las últimas veinticuatro horas entraron ${nuevos} solicitudes. `;
-    t += riesgo.length ? `Atención: ${riesgo.slice(0, 2).map(c => `${c.nombre} va al ${Math.round(c.pct)} por ciento`).join(' y ')} de su presupuesto. ` : 'Ningún centro de costo supera el ochenta y cinco por ciento. ';
-    if (fraude.length) t += `Alerta: hay ${fraude.length} ${fraude.length === 1 ? 'caso' : 'casos'} con posible fraccionamiento de compras; revísalos antes de aprobar. `;
-    t += 'Recuerda que todo es simulado. Que tengas buen día.';
-    const texto = `🎙️ <b>Briefing GastoClaro</b>\n${t}`;
+    const cap = s => { s = String(s || ''); return s.charAt(0).toUpperCase() + s.slice(1); };
+    // Guion hablado (ElevenLabs): frases cortas, números redondos
+    let t = `Buenos días. Tu resumen de gastos del ${fecha}. `;
+    t += pend.length ? `Tienes ${pend.length} ${pend.length === 1 ? 'solicitud' : 'solicitudes'} por aprobar, por ${n(montoPend)} pesos en total. ` : 'No tienes nada pendiente por aprobar. ';
+    t += nuevos ? `Ayer entraron ${nuevos} ${nuevos === 1 ? 'solicitud nueva' : 'solicitudes nuevas'}. ` : '';
+    t += riesgo.length ? `Ojo con el presupuesto: ${riesgo.slice(0, 2).map(c => `${c.nombre} ya va en ${Math.round(c.pct)} por ciento`).join(', y ')}. ` : 'Todos los presupuestos van bien. ';
+    if (fraudeSem.length) t += `Y una alerta: esta semana detecté ${fraudeSem.length === 1 ? 'una posible compra partida' : fraudeSem.length + ' posibles compras partidas'}. `;
+    t += 'Los detalles están en el mensaje. Buen día.';
+    // Tarjeta en Telegram
+    const L = '━━━━━━━━━━━━━━';
+    const lin = [`☀️ <b>Buenos días · ${fecha}</b>`, L];
+    lin.push(pend.length ? `⏳ <b>Por aprobar: ${pend.length}</b> · $${n(montoPend)}` : '✅ <b>Nada pendiente por aprobar</b>');
+    for (const c of pend.slice(0, 4)) lin.push(`   • ${c.caso_id} ${cap(c.concepto).slice(0, 28)} — $${n(+c.monto_total || 0)}`);
+    lin.push(`📥 Nuevas en 24 h: <b>${nuevos}</b>`);
+    lin.push(riesgo.length ? '📊 <b>Presupuestos en riesgo</b>' : '📊 Presupuestos: <b>todos por debajo de 85%</b>');
+    for (const c of riesgo.slice(0, 3)) lin.push(`   ${c.pct > 100 ? '🔴' : '🟡'} ${c.nombre}: ${Math.round(c.pct)}%`);
+    if (fraudeSem.length) lin.push(`🚨 <b>Compra partida detectada:</b> ${fraudeSem.map(c => c.caso_id).join(', ')}`);
+    lin.push(L, '<i>Simulado · 🎧 escucha el resumen en audio</i>');
+    const texto = lin.join('\n');
     return ap.map(u => ({ json: { chat_id: u.chat_id, guion: t.slice(0, 900), texto } }));
     """, [880, 800])
     w.add('ElevenLabs · texto a voz', 'n8n-nodes-base.httpRequest', 4.2, {
@@ -848,7 +958,7 @@ def build_programadas():
     w.add('Telegram · nota de voz', 'n8n-nodes-base.telegram', 1.2, {"operation": "sendAudio", "chatId": "={{ $('Armar briefing').item.json.chat_id }}", "binaryData": True,
         "binaryPropertyName": "audio", "additionalFields": {"caption": "={{ $('Armar briefing').item.json.texto }}", "parse_mode": "HTML", "title": "Briefing GastoClaro", "performer": "GastoClaro"}},
         [1320, 740], credentials=TG, onError='continueRegularOutput')
-    tg_send(w, 'Telegram · briefing en texto (respaldo)', "={{ $('Armar briefing').item.json.chat_id }}", "={{ $('Armar briefing').item.json.texto + '\\n<i>(audio no disponible)</i>' }}", [1320, 880], onError='continueRegularOutput')
+    tg_send(w, 'Telegram · briefing en texto (respaldo)', "={{ $('Armar briefing').item.json.chat_id }}", "={{ $('Armar briefing').item.json.texto.replace('🎧 escucha el resumen en audio', 'audio no disponible hoy') }}", [1320, 880], onError='continueRegularOutput')
     w.chain('Cada día 8:00', 'Casos para briefing', 'Presupuesto para briefing', 'Aprobadores', 'Armar briefing', 'ElevenLabs · texto a voz')
     w.link('ElevenLabs · texto a voz', 'Telegram · nota de voz', 0)
     w.link('ElevenLabs · texto a voz', 'Telegram · briefing en texto (respaldo)', 1)
@@ -875,8 +985,10 @@ def build_programadas():
     const presupuesto = $('Presupuesto vigente').all().map(i => i.json).filter(p => p.centro_costo).map(p => ({ centro_costo: p.centro_costo, nombre: p.nombre, presupuesto_mensual: p.presupuesto_mensual, comprometido: p.comprometido, periodo: p.periodo }));
     return [{ json: { generado: new Date().toISOString(), fuente: 'n8n Data Tables mdv_casos/mdv_trazas (exportación sanitizada)', modo: 'SIMULADO', ficticio: true, casos, trazas, presupuesto } }];
     """, [880, 500], executeOnce=True)
-    w.add('Responder exportación', 'n8n-nodes-base.respondToWebhook', 1.1, {"respondWith": "json", "responseBody": "={{ JSON.stringify($json) }}", "options": {}}, [1100, 500])
+    w.add('Responder exportación', 'n8n-nodes-base.respondToWebhook', 1.1, {"respondWith": "json", "responseBody": "={{ JSON.stringify($json) }}", "options": {"responseHeaders": {"entries": [{"name": "Access-Control-Allow-Origin", "value": "*"}, {"name": "Cache-Control", "value": "no-store"}]}}}, [1100, 500])
     w.chain('Webhook exportación', 'Todos los casos', 'Todas las trazas', 'Presupuesto vigente', 'Exportación sanitizada', 'Responder exportación')
+    w.add('Webhook en vivo (solo lectura)', 'n8n-nodes-base.webhook', 2, {"httpMethod": "GET", "path": "gastoclaro-live", "responseMode": "responseNode", "options": {}}, [220, 640], webhookId=nid())
+    w.link('Webhook en vivo (solo lectura)', 'Todos los casos')
     return w
 
 
