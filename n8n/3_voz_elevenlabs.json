@@ -2,7 +2,7 @@
  "name": "GastoClaro · 3 Voz ElevenLabs (webhook)",
  "nodes": [
   {
-   "id": "4ec0ed8f-12c3-4544-a45f-7bc072508f7c",
+   "id": "08a80607-f298-4759-b9b4-09463c53bb55",
    "name": "Webhook voz",
    "type": "n8n-nodes-base.webhook",
    "typeVersion": 2,
@@ -23,10 +23,10 @@
      "name": "GastoClaro voz (header)"
     }
    },
-   "webhookId": "c7c77c73-6d5d-40c2-ae2c-803457d53491"
+   "webhookId": "b01ebf43-f117-4cfb-92bd-e4b966ae9c1e"
   },
   {
-   "id": "8489ee02-b4e6-4dd7-b2a9-9b0bbc91106c",
+   "id": "b6c8ca71-6432-4fc6-bc56-06b34a2f74c1",
    "name": "Validar petición de voz",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -39,7 +39,7 @@
    }
   },
   {
-   "id": "ce4bc965-7795-4088-87a0-9518db308eb5",
+   "id": "636254d8-4252-4648-b069-126d0b6ba9d5",
    "name": "Ruta voz",
    "type": "n8n-nodes-base.switch",
    "typeVersion": 3.2,
@@ -60,7 +60,7 @@
         "combinator": "and",
         "conditions": [
          {
-          "id": "5bbfbc3f-823d-4f84-9777-857fad8549a3",
+          "id": "5ae909e3-86b1-4377-b6c7-3c7828e4e1fa",
           "leftValue": "={{ $json.ruta }}",
           "rightValue": "consultar",
           "operator": {
@@ -83,7 +83,7 @@
         "combinator": "and",
         "conditions": [
          {
-          "id": "bcf3588a-313c-43e0-acdb-36689b6b852c",
+          "id": "d7891f94-72fd-454b-9f12-7bd25328a0dd",
           "leftValue": "={{ $json.ruta }}",
           "rightValue": "crear",
           "operator": {
@@ -105,7 +105,7 @@
    }
   },
   {
-   "id": "7dc8cc00-87ab-4ae2-bf14-69bc44757270",
+   "id": "567670e3-c10e-43aa-ad36-ccc021b2ed22",
    "name": "Consultar caso",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -137,7 +137,7 @@
    "alwaysOutputData": true
   },
   {
-   "id": "ad3ef171-89cb-440a-8f38-1d86c7a50e6e",
+   "id": "aa952e08-61cc-43a1-9648-5385693e9fe8",
    "name": "Trazas del caso",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -169,7 +169,7 @@
    "executeOnce": true
   },
   {
-   "id": "c22909a1-f73f-482c-861b-1a6223bd35f7",
+   "id": "888da598-fb90-430d-94bc-254fc621471e",
    "name": "Respuesta consulta",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -182,7 +182,7 @@
    }
   },
   {
-   "id": "1e5ef4b4-6cce-4c58-9f9d-359cd2c0f3b5",
+   "id": "ec62e116-3a0b-42ee-80f6-395d34c4b0e7",
    "name": "Preparar caso de voz",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -195,7 +195,7 @@
    }
   },
   {
-   "id": "9750403b-4455-4325-8c4b-a73c696b6950",
+   "id": "5ab05b03-a94b-46c3-815d-ba97fc496589",
    "name": "Ejecutar orquestador (voz)",
    "type": "n8n-nodes-base.executeWorkflow",
    "typeVersion": 1.2,
@@ -215,7 +215,7 @@
    }
   },
   {
-   "id": "68032d00-d02a-4483-a7c3-0417dbcf6972",
+   "id": "1ca97a65-2498-41ec-b8c3-2fd8d309ac44",
    "name": "Respuesta creación",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -224,11 +224,11 @@
     320
    ],
    "parameters": {
-    "jsCode": "const r = $input.first().json;\nconst limpio = String(r.mensaje_solicitante || '').replace(/<[^>]+>/g, '');\nreturn [{ json: { creado: true, caso_id: r.caso_id, estado: r.estado, monto_total_mxn: r.monto_total, recomendacion: r.recomendacion, faltantes: r.faltantes, resumen: limpio.slice(0, 700), resultado: 'simulado' } }];"
+    "jsCode": "const r = $input.first().json;\nconst limpio = String(r.mensaje || r.mensaje_solicitante || '').replace(/<[^>]+>/g, '');\nreturn [{ json: { creado: true, caso_id: r.caso_id, estado: r.estado, monto_total_mxn: r.monto_total, recomendacion: r.recomendacion, faltantes: r.faltantes, resumen: limpio.slice(0, 700), resultado: 'simulado' } }];"
    }
   },
   {
-   "id": "6f5a557c-091d-42ec-9a50-f8ab78a5ea7a",
+   "id": "0714b0ac-4f38-4dd6-86ee-cec013ff79cd",
    "name": "Respuesta inválida",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -241,7 +241,7 @@
    }
   },
   {
-   "id": "405dd1a8-977c-40a2-b48f-e9593c0bc369",
+   "id": "f7ef9281-1f83-4309-aaac-b960fa1e0271",
    "name": "Responder a ElevenLabs",
    "type": "n8n-nodes-base.respondToWebhook",
    "typeVersion": 1.1,

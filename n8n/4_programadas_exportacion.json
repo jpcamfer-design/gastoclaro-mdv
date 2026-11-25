@@ -2,7 +2,7 @@
  "name": "GastoClaro · 4 Tarea programada y exportación",
  "nodes": [
   {
-   "id": "d65addde-c0c5-4e4a-8296-01fef72b37b5",
+   "id": "065657f5-167e-404e-b6a8-d918c7501cdc",
    "name": "Cada hora",
    "type": "n8n-nodes-base.scheduleTrigger",
    "typeVersion": 1.2,
@@ -22,7 +22,7 @@
    }
   },
   {
-   "id": "18fb92d6-54a4-433d-8d1a-a709206b91f9",
+   "id": "f7bf1ceb-344c-424c-bf5b-87bb765d41cc",
    "name": "Casos pendientes",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -53,7 +53,7 @@
    "alwaysOutputData": true
   },
   {
-   "id": "afd7cb52-742a-4739-8753-079e328934d3",
+   "id": "cb21b02a-acd1-494f-94e5-bcd33282014c",
    "name": "Detectar vencidos",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -66,7 +66,7 @@
    }
   },
   {
-   "id": "98d2d3ad-abfd-4b9b-9e16-bd7f507abfb0",
+   "id": "a3e37244-00c7-46fe-8a66-8f855849e9dc",
    "name": "Fila vencido",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -79,7 +79,7 @@
    }
   },
   {
-   "id": "f8d53e7c-3006-4e37-9943-a0db7abb0f6e",
+   "id": "6282bc79-e585-49f3-8b85-b5e448a5f1a2",
    "name": "Marcar expirado",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -115,7 +115,7 @@
    }
   },
   {
-   "id": "eb0b7133-8294-4dc7-bb32-6b241f261602",
+   "id": "f9aa5765-9694-4a09-8edf-077560257465",
    "name": "Cada día 8:00",
    "type": "n8n-nodes-base.scheduleTrigger",
    "typeVersion": 1.2,
@@ -136,7 +136,7 @@
    }
   },
   {
-   "id": "60bf31c4-187d-4202-b9ee-b8b994269dce",
+   "id": "cc91945f-952f-47da-806f-c71ec19def0e",
    "name": "Casos para briefing",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -167,7 +167,7 @@
    "alwaysOutputData": true
   },
   {
-   "id": "30dfee38-f44c-43de-9f10-c83a8fcf3328",
+   "id": "9fdc1a8d-f6f8-4ac2-90f0-b5394b7a5938",
    "name": "Presupuesto para briefing",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -199,7 +199,7 @@
    "executeOnce": true
   },
   {
-   "id": "393b167d-7bbd-443e-b03c-d1d6b4a72a8c",
+   "id": "e2232324-51e4-4aa9-809d-4064555d1d77",
    "name": "Aprobadores",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -236,7 +236,7 @@
    "executeOnce": true
   },
   {
-   "id": "02cbd93e-716f-44ad-b52c-7394ba157dc6",
+   "id": "9d38daaf-a6f8-4afc-8c6e-8a29c3d005ae",
    "name": "Armar briefing",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -245,11 +245,11 @@
     800
    ],
    "parameters": {
-    "jsCode": "const casos = $('Casos para briefing').all().map(i => i.json).filter(c => c.caso_id);\nconst pres = $('Presupuesto para briefing').all().map(i => i.json).filter(p => p.centro_costo);\nconst ap = $input.all().map(i => i.json).filter(u => u.chat_id && u.activo);\nconst n = v => Math.round(v).toLocaleString('es-MX');\nconst pend = casos.filter(c => c.estado === 'pendiente_aprobacion');\nconst montoPend = pend.reduce((a, c) => a + (+c.monto_total || 0), 0);\nconst ccs = pres.map(p => { const a = casos.filter(c => c.centro_costo === p.centro_costo && c.estado === 'aprobado_simulado').reduce((s, c) => s + (+c.monto_total || 0), 0);\n  const pe = casos.filter(c => c.centro_costo === p.centro_costo && c.estado === 'pendiente_aprobacion').reduce((s, c) => s + (+c.monto_total || 0), 0);\n  return { cc: p.centro_costo, nombre: p.nombre, pct: (p.comprometido + a + pe) / p.presupuesto_mensual * 100 }; }).sort((x, y) => y.pct - x.pct);\nconst riesgo = ccs.filter(c => c.pct >= 85);\nconst fraude = casos.filter(c => { try { return JSON.parse(c.politicas || '[]').some(p => p.id === 'POL-07' && !p.ok); } catch (e) { return false; } });\nconst ayer = Date.now() - 864e5;\nconst nuevos = casos.filter(c => new Date(c.createdAt).getTime() >= ayer).length;\nconst fecha = new Date().toLocaleDateString('es-MX', { timeZone: 'America/Mexico_City', weekday: 'long', day: 'numeric', month: 'long' });\nlet t = `Buenos días. Este es tu resumen de GastoClaro del ${fecha}. `;\nt += pend.length ? `Tienes ${pend.length} ${pend.length === 1 ? 'aprobación pendiente' : 'aprobaciones pendientes'} por ${n(montoPend)} pesos. ` : 'No tienes aprobaciones pendientes. ';\nt += `En las últimas veinticuatro horas entraron ${nuevos} solicitudes. `;\nt += riesgo.length ? `Atención: ${riesgo.slice(0, 2).map(c => `${c.nombre} va al ${Math.round(c.pct)} por ciento`).join(' y ')} de su presupuesto. ` : 'Ningún centro de costo supera el ochenta y cinco por ciento. ';\nif (fraude.length) t += `Alerta: hay ${fraude.length} ${fraude.length === 1 ? 'caso' : 'casos'} con posible fraccionamiento de compras; revísalos antes de aprobar. `;\nt += 'Recuerda que todo es simulado. Que tengas buen día.';\nconst texto = `🎙️ <b>Briefing GastoClaro</b>\\n${t}`;\nreturn ap.map(u => ({ json: { chat_id: u.chat_id, guion: t.slice(0, 900), texto } }));"
+    "jsCode": "const casos = $('Casos para briefing').all().map(i => i.json).filter(c => c.caso_id);\nconst pres = $('Presupuesto para briefing').all().map(i => i.json).filter(p => p.centro_costo);\nconst ap = $input.all().map(i => i.json).filter(u => u.chat_id && u.activo);\nconst n = v => Math.round(v).toLocaleString('es-MX');\nconst pend = casos.filter(c => c.estado === 'pendiente_aprobacion');\nconst montoPend = pend.reduce((a, c) => a + (+c.monto_total || 0), 0);\nconst ccs = pres.map(p => { const a = casos.filter(c => c.centro_costo === p.centro_costo && c.estado === 'aprobado_simulado').reduce((s, c) => s + (+c.monto_total || 0), 0);\n  const pe = casos.filter(c => c.centro_costo === p.centro_costo && c.estado === 'pendiente_aprobacion').reduce((s, c) => s + (+c.monto_total || 0), 0);\n  return { cc: p.centro_costo, nombre: p.nombre, pct: (p.comprometido + a + pe) / p.presupuesto_mensual * 100 }; }).sort((x, y) => y.pct - x.pct);\nconst riesgo = ccs.filter(c => c.pct >= 85);\nconst fraude = casos.filter(c => { try { return JSON.parse(c.politicas || '[]').some(p => p.id === 'POL-07' && !p.ok); } catch (e) { return false; } });\nconst ayer = Date.now() - 864e5, semana = Date.now() - 7 * 864e5;\nconst nuevos = casos.filter(c => new Date(c.createdAt).getTime() >= ayer).length;\nconst fraudeSem = fraude.filter(c => new Date(c.createdAt).getTime() >= semana);\nconst fecha = new Date().toLocaleDateString('es-MX', { timeZone: 'America/Mexico_City', weekday: 'long', day: 'numeric', month: 'long' });\nconst cap = s => { s = String(s || ''); return s.charAt(0).toUpperCase() + s.slice(1); };\n// Guion hablado (ElevenLabs): frases cortas, números redondos\nlet t = `Buenos días. Tu resumen de gastos del ${fecha}. `;\nt += pend.length ? `Tienes ${pend.length} ${pend.length === 1 ? 'solicitud' : 'solicitudes'} por aprobar, por ${n(montoPend)} pesos en total. ` : 'No tienes nada pendiente por aprobar. ';\nt += nuevos ? `Ayer entraron ${nuevos} ${nuevos === 1 ? 'solicitud nueva' : 'solicitudes nuevas'}. ` : '';\nt += riesgo.length ? `Ojo con el presupuesto: ${riesgo.slice(0, 2).map(c => `${c.nombre} ya va en ${Math.round(c.pct)} por ciento`).join(', y ')}. ` : 'Todos los presupuestos van bien. ';\nif (fraudeSem.length) t += `Y una alerta: esta semana detecté ${fraudeSem.length === 1 ? 'una posible compra partida' : fraudeSem.length + ' posibles compras partidas'}. `;\nt += 'Los detalles están en el mensaje. Buen día.';\n// Tarjeta en Telegram\nconst L = '━━━━━━━━━━━━━━';\nconst lin = [`☀️ <b>Buenos días · ${fecha}</b>`, L];\nlin.push(pend.length ? `⏳ <b>Por aprobar: ${pend.length}</b> · $${n(montoPend)}` : '✅ <b>Nada pendiente por aprobar</b>');\nfor (const c of pend.slice(0, 4)) lin.push(`   • ${c.caso_id} ${cap(c.concepto).slice(0, 28)} — $${n(+c.monto_total || 0)}`);\nlin.push(`📥 Nuevas en 24 h: <b>${nuevos}</b>`);\nlin.push(riesgo.length ? '📊 <b>Presupuestos en riesgo</b>' : '📊 Presupuestos: <b>todos por debajo de 85%</b>');\nfor (const c of riesgo.slice(0, 3)) lin.push(`   ${c.pct > 100 ? '🔴' : '🟡'} ${c.nombre}: ${Math.round(c.pct)}%`);\nif (fraudeSem.length) lin.push(`🚨 <b>Compra partida detectada:</b> ${fraudeSem.map(c => c.caso_id).join(', ')}`);\nlin.push(L, '<i>Simulado · 🎧 escucha el resumen en audio</i>');\nconst texto = lin.join('\\n');\nreturn ap.map(u => ({ json: { chat_id: u.chat_id, guion: t.slice(0, 900), texto } }));"
    }
   },
   {
-   "id": "a1b04814-4753-4006-80c5-bff8ff053b37",
+   "id": "dc8c1bf4-df5d-4b7b-8960-456d4ab195ae",
    "name": "ElevenLabs · texto a voz",
    "type": "n8n-nodes-base.httpRequest",
    "typeVersion": 4.2,
@@ -284,7 +284,7 @@
    "onError": "continueErrorOutput"
   },
   {
-   "id": "d70360c6-405d-4ed8-a6be-6fdb16821f13",
+   "id": "0de4a8be-4fd0-4528-98a1-8bd559e92bd6",
    "name": "Telegram · nota de voz",
    "type": "n8n-nodes-base.telegram",
    "typeVersion": 1.2,
@@ -313,7 +313,7 @@
    "onError": "continueRegularOutput"
   },
   {
-   "id": "4b5d97e9-c544-46a7-b774-296fa20ae5b6",
+   "id": "a866a2b4-77e3-42a6-844f-ebb54fb703e1",
    "name": "Telegram · briefing en texto (respaldo)",
    "type": "n8n-nodes-base.telegram",
    "typeVersion": 1.2,
@@ -323,7 +323,7 @@
    ],
    "parameters": {
     "chatId": "={{ $('Armar briefing').item.json.chat_id }}",
-    "text": "={{ $('Armar briefing').item.json.texto + '\\n<i>(audio no disponible)</i>' }}",
+    "text": "={{ $('Armar briefing').item.json.texto.replace('🎧 escucha el resumen en audio', 'audio no disponible hoy') }}",
     "additionalFields": {
      "appendAttribution": false,
      "parse_mode": "HTML",
@@ -342,7 +342,7 @@
    "waitBetweenTries": 2000
   },
   {
-   "id": "6631042f-2b8b-40dc-995d-2a9ca63d0ffb",
+   "id": "15b25497-f3dc-4cb2-ad9d-b538003df84b",
    "name": "Webhook exportación",
    "type": "n8n-nodes-base.webhook",
    "typeVersion": 2,
@@ -363,10 +363,10 @@
      "name": "GastoClaro export (header)"
     }
    },
-   "webhookId": "3eeec4c6-59cd-45e3-bc12-624d9510c4f0"
+   "webhookId": "964f5c9c-5f98-4f2e-8fda-8776f7bb83d5"
   },
   {
-   "id": "eb513ca9-90f1-4397-988d-481e93350525",
+   "id": "7c76d823-601b-481e-a76e-3627073ecda1",
    "name": "Todos los casos",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -397,7 +397,7 @@
    "alwaysOutputData": true
   },
   {
-   "id": "0a401940-185a-4e3c-a095-60a4b1f6fe04",
+   "id": "cda62dc7-13ba-44a6-95bb-1585935f9c2f",
    "name": "Todas las trazas",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -429,7 +429,7 @@
    "executeOnce": true
   },
   {
-   "id": "2a848277-c37b-43c1-bc5e-b8a5bba98449",
+   "id": "2a9690a7-6655-437e-bbc7-95cdd9ce6fa4",
    "name": "Presupuesto vigente",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -461,7 +461,7 @@
    "executeOnce": true
   },
   {
-   "id": "4155bead-5581-4049-8942-18221ca23b1b",
+   "id": "02f57d35-96cd-4226-bf73-32e33e2e44eb",
    "name": "Exportación sanitizada",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -475,7 +475,7 @@
    "executeOnce": true
   },
   {
-   "id": "6e2e9e0a-ba17-4ef5-b16d-811f4f7f30db",
+   "id": "cb13e4cd-447e-4f56-a931-40097346419e",
    "name": "Responder exportación",
    "type": "n8n-nodes-base.respondToWebhook",
    "typeVersion": 1.1,
@@ -486,8 +486,38 @@
    "parameters": {
     "respondWith": "json",
     "responseBody": "={{ JSON.stringify($json) }}",
-    "options": {}
+    "options": {
+     "responseHeaders": {
+      "entries": [
+       {
+        "name": "Access-Control-Allow-Origin",
+        "value": "*"
+       },
+       {
+        "name": "Cache-Control",
+        "value": "no-store"
+       }
+      ]
+     }
+    }
    }
+  },
+  {
+   "id": "5f3955fc-3fa2-449d-9345-f8a8a11374a6",
+   "name": "Webhook en vivo (solo lectura)",
+   "type": "n8n-nodes-base.webhook",
+   "typeVersion": 2,
+   "position": [
+    220,
+    640
+   ],
+   "parameters": {
+    "httpMethod": "GET",
+    "path": "gastoclaro-live",
+    "responseMode": "responseNode",
+    "options": {}
+   },
+   "webhookId": "7bc7509a-e62a-424f-919b-328e9a350c09"
   }
  ],
  "connections": {
@@ -657,6 +687,17 @@
     [
      {
       "node": "Responder exportación",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Webhook en vivo (solo lectura)": {
+   "main": [
+    [
+     {
+      "node": "Todos los casos",
       "type": "main",
       "index": 0
      }

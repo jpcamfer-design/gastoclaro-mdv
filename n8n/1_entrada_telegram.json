@@ -2,7 +2,7 @@
  "name": "GastoClaro · 1 Entrada Telegram",
  "nodes": [
   {
-   "id": "83c86616-74fb-47d6-b026-9af6ca41a5cf",
+   "id": "c1d58896-d999-4766-8227-4843bbdf89ce",
    "name": "Telegram Trigger",
    "type": "n8n-nodes-base.telegramTrigger",
    "typeVersion": 1.2,
@@ -23,11 +23,11 @@
      "name": "Telegram GastoClaro"
     }
    },
-   "webhookId": "8a7b2b61-117a-4474-b4a7-64f6ef15eaa4"
+   "webhookId": "60bb78cb-9fc3-4e0b-b1be-f088a3d154dc"
   },
   {
-   "id": "9a3a619a-af43-4d7d-a0e8-05df986a7b6a",
-   "name": "Normalizar evento",
+   "id": "d8823721-50a7-426d-a64c-189f96d621c5",
+   "name": "Evento crudo",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
    "position": [
@@ -35,11 +35,125 @@
     300
    ],
    "parameters": {
-    "jsCode": "const u = $input.first().json;\nconst cb = u.callback_query;\nconst msg = cb ? cb.message : u.message;\nconst ev = { event_key: 'tg-' + (u.update_id ?? (msg && msg.message_id)), chat_id: String(cb ? cb.from.id : (msg && msg.chat && msg.chat.id) || ''),\n  texto: cb ? '' : String((msg && (msg.text || msg.caption)) || '').trim(), tiene_texto: !!(msg && msg.text), tipo: cb ? 'decision' : 'mensaje',\n  callback_id: cb ? cb.id : '', callback_data: cb ? String(cb.data || '') : '', message_id: msg ? msg.message_id : null, recibido: new Date().toISOString() };\nreturn [{ json: ev }];"
+    "jsCode": "const u = $input.first().json;\nconst cb = u.callback_query;\nconst msg = cb ? cb.message : u.message;\nconst ev = { event_key: 'tg-' + (u.update_id ?? (msg && msg.message_id)), chat_id: String(cb ? cb.from.id : (msg && msg.chat && msg.chat.id) || ''),\n  texto: cb ? '' : String((msg && (msg.text || msg.caption)) || '').trim(), tiene_texto: !!(msg && msg.text), tipo: cb ? 'decision' : 'mensaje',\n  callback_id: cb ? cb.id : '', callback_data: cb ? String(cb.data || '') : '', message_id: msg ? msg.message_id : null, recibido: new Date().toISOString(),\n  voz_file_id: (!cb && msg && msg.voice) ? msg.voice.file_id : '', voz_dur: (!cb && msg && msg.voice) ? Number(msg.voice.duration || 0) : 0 };\nreturn [{ json: ev }];"
    }
   },
   {
-   "id": "b7c25e82-1b96-4053-80d0-380d23d8a852",
+   "id": "f03727e3-7879-47ea-a03e-f2b14d211f51",
+   "name": "¿Nota de voz?",
+   "type": "n8n-nodes-base.if",
+   "typeVersion": 2.2,
+   "position": [
+    220,
+    120
+   ],
+   "parameters": {
+    "conditions": {
+     "options": {
+      "caseSensitive": true,
+      "leftValue": "",
+      "typeValidation": "loose",
+      "version": 2
+     },
+     "conditions": [
+      {
+       "id": "074d2a58-9b67-43f6-916d-d33234e14bb9",
+       "leftValue": "={{ !!$json.voz_file_id && $json.voz_dur <= 60 }}",
+       "rightValue": "",
+       "operator": {
+        "type": "boolean",
+        "operation": "true",
+        "singleValue": true
+       }
+      }
+     ],
+     "combinator": "and"
+    },
+    "options": {}
+   }
+  },
+  {
+   "id": "a1aa856f-d016-4af5-a7f3-16e12907a34a",
+   "name": "Descargar audio",
+   "type": "n8n-nodes-base.telegram",
+   "typeVersion": 1.2,
+   "position": [
+    440,
+    60
+   ],
+   "parameters": {
+    "resource": "file",
+    "fileId": "={{ $json.voz_file_id }}",
+    "additionalFields": {}
+   },
+   "credentials": {
+    "telegramApi": {
+     "id": "__CRED_TG__",
+     "name": "Telegram GastoClaro"
+    }
+   },
+   "onError": "continueRegularOutput"
+  },
+  {
+   "id": "1e284750-ef02-4652-918c-a1006ffebb19",
+   "name": "ElevenLabs · voz a texto",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.2,
+   "position": [
+    660,
+    60
+   ],
+   "parameters": {
+    "method": "POST",
+    "url": "https://api.elevenlabs.io/v1/speech-to-text",
+    "authentication": "genericCredentialType",
+    "genericAuthType": "httpHeaderAuth",
+    "sendBody": true,
+    "contentType": "multipart-form-data",
+    "bodyParameters": {
+     "parameters": [
+      {
+       "parameterType": "formBinaryData",
+       "name": "file",
+       "inputDataFieldName": "data"
+      },
+      {
+       "name": "model_id",
+       "value": "scribe_v1"
+      },
+      {
+       "name": "language_code",
+       "value": "spa"
+      }
+     ]
+    },
+    "options": {
+     "timeout": 30000
+    }
+   },
+   "credentials": {
+    "httpHeaderAuth": {
+     "id": "__CRED_EL__",
+     "name": "ElevenLabs API"
+    }
+   },
+   "onError": "continueRegularOutput"
+  },
+  {
+   "id": "2a61fa0f-fdcd-45f8-9dc0-4644db881959",
+   "name": "Normalizar evento",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    880,
+    120
+   ],
+   "parameters": {
+    "jsCode": "// Si llegó nota de voz, el texto transcrito entra al mismo flujo que un mensaje escrito\nconst ev = { ...$('Evento crudo').first().json };\nif (ev.voz_file_id) { const txt = String(($input.first().json || {}).text || '').trim(); if (txt) { ev.texto = txt; ev.tiene_texto = true; ev.por_voz = true; } }\nreturn [{ json: ev }];"
+   }
+  },
+  {
+   "id": "325ab60c-c8eb-40b2-87ef-57c2d4868cde",
    "name": "Buscar evento (deduplicación)",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -71,7 +185,7 @@
    "alwaysOutputData": true
   },
   {
-   "id": "06e198e2-8f78-4fd2-8b6d-c4723236de3f",
+   "id": "74e80a56-e5b6-40ed-91cb-ed0501fa4dc2",
    "name": "¿Evento nuevo?",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -84,7 +198,7 @@
    }
   },
   {
-   "id": "f7b3bdc6-a11c-4dd9-b976-0372bac029d4",
+   "id": "37e4609e-c552-4a9e-a3b3-faf4aa8fed5b",
    "name": "Nuevo evento",
    "type": "n8n-nodes-base.if",
    "typeVersion": 2.2,
@@ -102,7 +216,7 @@
      },
      "conditions": [
       {
-       "id": "ec2501b9-32e6-43d6-a001-c9875fa86e8b",
+       "id": "11d9f831-b1a3-46a0-8585-b4ebba73ff48",
        "leftValue": "={{ !$json.duplicado }}",
        "rightValue": "",
        "operator": {
@@ -118,7 +232,7 @@
    }
   },
   {
-   "id": "8b6b27c3-6551-4299-9b4b-8a9b1ebbd1c9",
+   "id": "a90ac808-fbb1-42f5-9907-597c4022749f",
    "name": "Fila evento",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -127,11 +241,11 @@
     300
    ],
    "parameters": {
-    "jsCode": "const e=$input.first().json; return [{ json: { event_key: e.event_key, tipo: e.tipo, caso_id: (e.callback_data.split('|')[2]||'') } }];"
+    "jsCode": "const e=$input.first().json; return [{ json: { event_key: e.event_key, tipo: e.tipo, caso_id: (e.callback_data.startsWith('v|') ? e.callback_data.split('|')[1] : (e.callback_data.split('|')[2]||'')) } }];"
    }
   },
   {
-   "id": "42885458-52dc-48b2-b232-ce38aea7054c",
+   "id": "43efda5e-e70a-4746-8e22-2a592f956391",
    "name": "Registrar evento",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -157,7 +271,7 @@
    }
   },
   {
-   "id": "d17c6f31-ed85-4347-97c4-2e48467c7a0d",
+   "id": "7f6dc0d5-a627-46b9-a741-81aa2307850f",
    "name": "Buscar usuario autorizado",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -173,23 +287,60 @@
      "mode": "id",
      "value": "__DT_usuarios__"
     },
-    "matchType": "allConditions",
+    "matchType": "anyCondition",
     "filters": {
      "conditions": [
       {
        "keyName": "chat_id",
        "condition": "eq",
        "keyValue": "={{ $('Normalizar evento').first().json.chat_id }}"
+      },
+      {
+       "keyName": "chat_id",
+       "condition": "eq",
+       "keyValue": "MODO_DEMO"
       }
      ]
     },
-    "returnAll": false,
-    "limit": 1
+    "returnAll": true
    },
-   "alwaysOutputData": true
+   "alwaysOutputData": true,
+   "executeOnce": true
   },
   {
-   "id": "ca909108-2222-4a37-816e-5ab5bdc0a80a",
+   "id": "c7ba0a19-402b-4f92-82e9-3a5d7df8f491",
+   "name": "Casos de invitados",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    1650,
+    420
+   ],
+   "parameters": {
+    "resource": "row",
+    "operation": "get",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "id",
+     "value": "__DT_casos__"
+    },
+    "matchType": "allConditions",
+    "filters": {
+     "conditions": [
+      {
+       "keyName": "canal",
+       "condition": "eq",
+       "keyValue": "invitado"
+      }
+     ]
+    },
+    "returnAll": true
+   },
+   "alwaysOutputData": true,
+   "executeOnce": true
+  },
+  {
+   "id": "5fc0fbe8-bc8e-450a-8b99-26e7612be1cf",
    "name": "Autorizar y enrutar",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -198,11 +349,11 @@
     300
    ],
    "parameters": {
-    "jsCode": "const ev = $('Normalizar evento').first().json;\nconst u = $input.all().map(i => i.json).find(x => x.chat_id === ev.chat_id && x.activo) || null;\nlet ruta = 'invalido', caso_id = '', accion = '', version = 0;\nconst t = ev.texto;\nif (!u) ruta = 'no_autorizado';\nelse if (ev.tipo === 'decision') { const p = ev.callback_data.split('|'); if (p[0] === 'd' && ['ap', 'rc'].includes(p[1]) && /^GAS-\\d{4}$/.test(p[2] || '')) { ruta = 'decision'; accion = p[1]; caso_id = p[2]; version = Number(p[3] || 0); } }\nelse if (!ev.tiene_texto) ruta = 'sin_texto';\nelse if (/^\\/(start|ayuda|help)/i.test(t)) ruta = 'ayuda';\nelse if (/^\\/estado/i.test(t)) { const m = t.toUpperCase().match(/GAS-?\\s?(\\d{1,4})/); ruta = m ? 'estado' : 'estado_sin_folio'; caso_id = m ? 'GAS-' + m[1].padStart(4, '0') : ''; }\nelse if (/^\\/nuevo/i.test(t)) ruta = 'nuevo';\nelse ruta = 'invalido';\nconst puedeSolicitar = u && ['solicitante', 'ambos'].includes(u.rol), puedeAprobar = u && ['aprobador', 'ambos'].includes(u.rol);\nif (ruta === 'nuevo' && !puedeSolicitar) ruta = 'no_autorizado';\nreturn [{ json: { ...ev, ruta, caso_id, accion, version, alias: u ? u.alias : '', rol: u ? u.rol : '', puedeAprobar: !!puedeAprobar } }];"
+    "jsCode": "const ev = $('Normalizar evento').first().json;\nconst us = $('Buscar usuario autorizado').all().map(i => i.json);\nlet u = us.find(x => x.chat_id === ev.chat_id && x.activo) || null;\n// Modo invitado (demo en clase): cualquiera puede pedir, nadie externo puede aprobar; límites para cuidar el costo\nconst demo = us.find(x => x.chat_id === 'MODO_DEMO' && x.activo);\nlet invitado = false, limite = '';\nif (!u && demo) { u = { chat_id: ev.chat_id, alias: 'Invitado ' + ev.chat_id.slice(-3), rol: 'invitado', activo: true }; invitado = true; }\nif (invitado) {\n  const gc = $('Casos de invitados').all().map(i => i.json).filter(c => c.caso_id);\n  const hoy = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' });\n  const deHoy = gc.filter(c => new Date(c.createdAt).toLocaleDateString('en-CA', { timeZone: 'America/Mexico_City' }) === hoy);\n  const maxPersona = Number((demo.alias || '').match(/(\\d+)\\/persona/)?.[1] || 2), maxDia = Number((demo.alias || '').match(/(\\d+)\\/d[ií]a/)?.[1] || 40);\n  if (gc.filter(c => c.chat_solicitante === ev.chat_id).length >= maxPersona) limite = 'persona';\n  else if (deHoy.length >= maxDia) limite = 'dia';\n}\nlet ruta = 'invalido', caso_id = '', accion = '', version = 0;\nconst t = ev.texto;\nif (!u) ruta = 'no_autorizado';\nelse if (ev.tipo === 'decision') { const p = ev.callback_data.split('|'); if (p[0] === 'd' && ['ap', 'rc'].includes(p[1]) && /^GAS-\\d{4}$/.test(p[2] || '')) { ruta = 'decision'; accion = p[1]; caso_id = p[2]; version = Number(p[3] || 0); }\n  else if (p[0] === 'v' && /^GAS-\\d{4}$/.test(p[1] || '')) { ruta = 'detalle'; caso_id = p[1]; } }\nelse if (!ev.tiene_texto) ruta = 'sin_texto';\n// Lenguaje natural: los comandos siguen funcionando, pero no son obligatorios\nelse if (/^\\/(start|ayuda|help)\\b/i.test(t) || /^(hola|buen[oa]s|hey|qu[eé] onda|ayuda|help|men[uú]|qu[eé] (haces|puedes)|c[oó]mo funciona)\\b[\\s\\S]{0,30}$/i.test(t)) ruta = 'ayuda';\nelse if (/^\\/estado/i.test(t) || (/GAS-?\\s?\\d{1,4}/i.test(t) && t.length <= 80)) { const m = t.toUpperCase().match(/GAS-?\\s?(\\d{1,4})/); ruta = m ? 'estado' : 'estado_sin_folio'; caso_id = m ? 'GAS-' + m[1].padStart(4, '0') : ''; }\nelse if (/^\\/nuevo/i.test(t) || t.length >= 12) ruta = 'nuevo';\nelse ruta = 'invalido';\nconst puedeSolicitar = u && ['solicitante', 'ambos'].includes(u.rol), puedeAprobar = u && ['aprobador', 'ambos'].includes(u.rol);\nif (ruta === 'nuevo' && !puedeSolicitar && !invitado) ruta = 'no_autorizado';\nif (ruta === 'nuevo' && invitado && limite) ruta = 'limite_invitado';\nreturn [{ json: { ...ev, ruta, caso_id, accion, version, alias: u ? u.alias : '', rol: u ? u.rol : '', puedeAprobar: !!puedeAprobar, invitado, limite } }];"
    }
   },
   {
-   "id": "0a674bfd-ecb6-478e-b810-7f4b02c2fa75",
+   "id": "759345a2-a744-4590-b743-108a8f27e2e3",
    "name": "Enrutar",
    "type": "n8n-nodes-base.switch",
    "typeVersion": 3.2,
@@ -223,7 +374,7 @@
         "combinator": "and",
         "conditions": [
          {
-          "id": "842163d2-ff9f-44bf-ac5f-8b92ab28ff02",
+          "id": "a8dcb23b-cabb-4edc-84b8-4507303d4f82",
           "leftValue": "={{ $json.ruta }}",
           "rightValue": "nuevo",
           "operator": {
@@ -246,7 +397,7 @@
         "combinator": "and",
         "conditions": [
          {
-          "id": "0a5dba74-309d-49da-8c0c-5bfcc6d36c15",
+          "id": "46e3898b-03e8-4569-89b4-35b1f3523f20",
           "leftValue": "={{ $json.ruta }}",
           "rightValue": "estado",
           "operator": {
@@ -269,7 +420,7 @@
         "combinator": "and",
         "conditions": [
          {
-          "id": "73458e73-cbd6-4cfa-b8a8-a8555949cba1",
+          "id": "ac5b64fc-0753-4de0-8b3b-8f716c281f74",
           "leftValue": "={{ $json.ruta }}",
           "rightValue": "decision",
           "operator": {
@@ -292,7 +443,7 @@
         "combinator": "and",
         "conditions": [
          {
-          "id": "b69ab7b3-d44c-4e1e-83ef-ed5d505d0e22",
+          "id": "fbc26e39-2a37-4440-8156-8b0477d08d4c",
           "leftValue": "={{ $json.ruta }}",
           "rightValue": "ayuda",
           "operator": {
@@ -315,7 +466,7 @@
         "combinator": "and",
         "conditions": [
          {
-          "id": "327d23c0-7cc0-4fee-bbde-3ec4ac5390d1",
+          "id": "274d792a-d5cb-4999-8bb2-d92043eb5dfb",
           "leftValue": "={{ $json.ruta }}",
           "rightValue": "no_autorizado",
           "operator": {
@@ -327,6 +478,29 @@
        },
        "renameOutput": true,
        "outputKey": "no_autorizado"
+      },
+      {
+       "conditions": {
+        "options": {
+         "caseSensitive": true,
+         "typeValidation": "strict",
+         "version": 2
+        },
+        "combinator": "and",
+        "conditions": [
+         {
+          "id": "08b3367b-8847-458b-8de9-78f5e159acc7",
+          "leftValue": "={{ $json.ruta }}",
+          "rightValue": "detalle",
+          "operator": {
+           "type": "string",
+           "operation": "equals"
+          }
+         }
+        ]
+       },
+       "renameOutput": true,
+       "outputKey": "detalle"
       }
      ]
     },
@@ -337,7 +511,7 @@
    }
   },
   {
-   "id": "63ae9762-a79c-4374-9cc5-3a3813985da2",
+   "id": "a589c3fc-7012-4f52-82fc-b9b588e4bcdf",
    "name": "Duplicado ignorado",
    "type": "n8n-nodes-base.noOp",
    "typeVersion": 1,
@@ -348,7 +522,7 @@
    "parameters": {}
   },
   {
-   "id": "9385b341-8d41-4954-a425-6eec8bd9999d",
+   "id": "9a0d8499-eaed-444b-85f5-c37b6d5a3339",
    "name": "Acuse de recibo",
    "type": "n8n-nodes-base.telegram",
    "typeVersion": 1.2,
@@ -358,7 +532,7 @@
    ],
    "parameters": {
     "chatId": "={{ $json.chat_id }}",
-    "text": "=📥 Recibí tu solicitud. La procesan 4 agentes (Intake → Datos → Análisis → Revisor). Te aviso en unos segundos.",
+    "text": "={{ ($json.por_voz ? '🎙️ Te entendí: «' + $json.texto.slice(0, 200) + '»\n' : '') + '📥 Recibida. 4 agentes la están revisando: ordenar → buscar precio → analizar → validar reglas. Te respondo en unos segundos.' }}",
     "additionalFields": {
      "appendAttribution": false,
      "parse_mode": "HTML",
@@ -377,7 +551,7 @@
    "waitBetweenTries": 2000
   },
   {
-   "id": "88e69fdc-87a1-4e79-a703-d6e1e26c5b88",
+   "id": "63c7cf02-582f-4310-8345-495f9739aef6",
    "name": "Preparar caso",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -386,11 +560,11 @@
     0
    ],
    "parameters": {
-    "jsCode": "const e=$('Autorizar y enrutar').first().json; return [{ json: { canal:'telegram', chat_id:e.chat_id, usuario:e.alias, texto:e.texto } }];"
+    "jsCode": "const e=$('Autorizar y enrutar').first().json; return [{ json: { canal: e.invitado ? 'invitado' : 'telegram', chat_id:e.chat_id, usuario:e.alias, texto:e.texto } }];"
    }
   },
   {
-   "id": "b4c26b64-bfca-4513-9b4d-847f60120e8f",
+   "id": "a3a48ae3-bd24-4bc9-8639-580abfd8cce8",
    "name": "Ejecutar orquestador",
    "type": "n8n-nodes-base.executeWorkflow",
    "typeVersion": 1.2,
@@ -410,7 +584,7 @@
    }
   },
   {
-   "id": "0e8f7325-5be2-42ef-98d8-e9f50bf88407",
+   "id": "2cbef614-a390-45bc-a28a-decfc4ae1f77",
    "name": "Resultado al solicitante",
    "type": "n8n-nodes-base.telegram",
    "typeVersion": 1.2,
@@ -425,6 +599,23 @@
      "appendAttribution": false,
      "parse_mode": "HTML",
      "disable_web_page_preview": true
+    },
+    "replyMarkup": "inlineKeyboard",
+    "inlineKeyboard": {
+     "rows": [
+      {
+       "row": {
+        "buttons": [
+         {
+          "text": "🔎 Ver detalle",
+          "additionalFields": {
+           "callback_data": "={{ 'v|' + $json.caso_id }}"
+          }
+         }
+        ]
+       }
+      }
+     ]
     }
    },
    "credentials": {
@@ -438,7 +629,7 @@
    "waitBetweenTries": 2000
   },
   {
-   "id": "5dca645d-4df0-4ab9-a13c-16fc1ea9ae4e",
+   "id": "90f4f27f-5373-4e2e-b592-6b2b67af3d9b",
    "name": "Leer caso",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -470,7 +661,7 @@
    "alwaysOutputData": true
   },
   {
-   "id": "ff027356-826b-4690-9ae0-28dbb57c1c4a",
+   "id": "84c1b89d-e3af-4212-a4da-8eac08446cf9",
    "name": "Formatear estado",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -479,11 +670,11 @@
     200
    ],
    "parameters": {
-    "jsCode": "const e = $('Autorizar y enrutar').first().json;\nconst c = $input.all().map(i => i.json).find(x => x.caso_id === e.caso_id);\nconst esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\nconst fmt = n => Number(n || 0).toLocaleString('es-MX');\nlet t;\nif (!c || (c.chat_solicitante !== e.chat_id && !e.puedeAprobar)) t = `No encontré el folio ${esc(e.caso_id)} entre tus casos.`;\nelse t = `<b>${esc(c.caso_id)}</b> · estado: <b>${esc(c.estado)}</b>\\n${esc(c.concepto)}\\nCC ${esc(c.centro_costo)} · $${fmt(c.monto_total)} MXN\\nRecomendación: ${esc(c.recomendacion || 'n/d')} · Revisión: ${esc(c.veredicto || 'n/d')} (v${c.version})` +\n  (c.decision ? `\\nDecisión: ${esc(c.decision)}` : '') + (c.aprobacion_expira && c.estado === 'pendiente_aprobacion' ? `\\nExpira: ${new Date(c.aprobacion_expira).toLocaleString('es-MX', { timeZone: 'America/Mexico_City' })}` : '') + '\\n<i>Resultado simulado</i>';\nreturn [{ json: { chat_id: e.chat_id, texto: t } }];"
+    "jsCode": "const e = $('Autorizar y enrutar').first().json;\nconst c = $input.all().map(i => i.json).find(x => x.caso_id === e.caso_id);\nconst esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\nconst fmt = n => Number(n || 0).toLocaleString('es-MX');\nlet t;\nif (!c || (c.chat_solicitante !== e.chat_id && !e.puedeAprobar)) t = `No encontré el folio ${esc(e.caso_id)} entre tus casos.`;\nelse { const E = { pendiente_aprobacion: '⏳ Esperando al Budget Owner', aprobado_simulado: '✅ Aprobado', rechazado_aprobador: '❌ Rechazado por el Budget Owner', rechazado_politica: '⛔ Rechazado por reglas', devuelto_solicitante: '↩️ Devuelto para corregir', escalado_gerencia: '⬆️ Escalado a Gerencia', requiere_aclaracion: '✍️ Faltan datos', rechazado_entrada: '🛡️ Bloqueado', detenido_calidad: '🛑 Detenido por calidad', detenido_presupuesto: '🛑 Límite de costo', error_controlado: '⚠️ Error controlado', expirado: '⌛ Expiró sin respuesta' };\n  t = `📌 <b>${esc(c.caso_id)} · ${esc(c.concepto)}</b>\\n━━━━━━━━━━━━━━\\nEstado: <b>${E[c.estado] || esc(c.estado)}</b>` + (c.monto_total ? `\\n💰 $${fmt(c.monto_total)} · ${esc(c.centro_costo)}` : '') +\n  (c.estado === 'pendiente_aprobacion' && c.aprobacion_expira ? `\\nVence: ${new Date(c.aprobacion_expira).toLocaleString('es-MX', { timeZone: 'America/Mexico_City', dateStyle: 'short', timeStyle: 'short' })}` : '') + '\\n<i>Simulado</i>'; }\nreturn [{ json: { chat_id: e.chat_id, texto: t } }];"
    }
   },
   {
-   "id": "4487c189-f2c5-4a21-bbf7-5fa400b51182",
+   "id": "1f2eaab2-a52e-4440-b144-09816374b85c",
    "name": "Responder estado",
    "type": "n8n-nodes-base.telegram",
    "typeVersion": 1.2,
@@ -498,6 +689,23 @@
      "appendAttribution": false,
      "parse_mode": "HTML",
      "disable_web_page_preview": true
+    },
+    "replyMarkup": "inlineKeyboard",
+    "inlineKeyboard": {
+     "rows": [
+      {
+       "row": {
+        "buttons": [
+         {
+          "text": "🔎 Ver detalle",
+          "additionalFields": {
+           "callback_data": "={{ 'v|' + $('Autorizar y enrutar').first().json.caso_id }}"
+          }
+         }
+        ]
+       }
+      }
+     ]
     }
    },
    "credentials": {
@@ -511,7 +719,7 @@
    "waitBetweenTries": 2000
   },
   {
-   "id": "d244d3fa-914f-4ea2-89bd-4825833f4a4d",
+   "id": "fd65d42b-25ae-4782-950a-fcca6333c237",
    "name": "Leer caso a decidir",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -543,7 +751,7 @@
    "alwaysOutputData": true
   },
   {
-   "id": "29b7fd3b-2251-4cdf-91a6-7f0861c541e3",
+   "id": "3ca39274-92b8-47b1-a153-05646e89b7e3",
    "name": "Validar decisión (servidor)",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -552,11 +760,11 @@
     400
    ],
    "parameters": {
-    "jsCode": "const e = $('Autorizar y enrutar').first().json;\nconst c = $input.all().map(i => i.json).find(x => x.caso_id === e.caso_id);\nlet ok = false, motivo = '';\nif (!e.puedeAprobar) motivo = 'No tienes rol de aprobador.';\nelse if (!c) motivo = 'Folio inexistente.';\nelse if (c.estado !== 'pendiente_aprobacion') motivo = `El caso ya está en estado ${c.estado}.`;\nelse if (Number(c.version) !== Number(e.version)) motivo = `La versión ${e.version} ya no es la vigente (v${c.version}).`;\nelse if (c.aprobacion_expira && new Date(c.aprobacion_expira) < new Date()) motivo = 'La solicitud de aprobación expiró.';\nelse ok = true;\nconst aprobado = e.accion === 'ap';\nconst ahora = new Date().toISOString();\nreturn [{ json: { ok, motivo, row_id: c ? c.id : null, caso_id: e.caso_id, aprobado, chat_aprobador: e.chat_id, chat_solicitante: c ? c.chat_solicitante : '',\n  callback_id: e.callback_id, message_id: e.message_id, version: e.version, ahora,\n  nuevo_estado: aprobado ? 'aprobado_simulado' : 'rechazado_aprobador', decision: (aprobado ? 'aprobado' : 'rechazado') + ' por ' + e.alias + ' (v' + e.version + ')' } }];"
+    "jsCode": "const e = $('Autorizar y enrutar').first().json;\nconst c = $input.all().map(i => i.json).find(x => x.caso_id === e.caso_id);\nlet ok = false, motivo = '';\nif (!e.puedeAprobar) motivo = 'No tienes rol de aprobador.';\nelse if (!c) motivo = 'Folio inexistente.';\nelse if (c.estado !== 'pendiente_aprobacion') motivo = `El caso ya está en estado ${c.estado}.`;\nelse if (Number(c.version) !== Number(e.version)) motivo = `La versión ${e.version} ya no es la vigente (v${c.version}).`;\nelse if (c.aprobacion_expira && new Date(c.aprobacion_expira) < new Date()) motivo = 'La solicitud de aprobación expiró.';\nelse ok = true;\nconst aprobado = e.accion === 'ap';\nconst ahora = new Date().toISOString();\nreturn [{ json: { ok, motivo, row_id: c ? c.id : null, caso_id: e.caso_id, aprobado, chat_aprobador: e.chat_id, chat_solicitante: c ? c.chat_solicitante : '',\n  callback_id: e.callback_id, message_id: e.message_id, version: e.version, ahora,\n  concepto: c ? c.concepto : '', monto: c ? Number(c.monto_total || 0).toLocaleString('es-MX') : '0',\n  nuevo_estado: aprobado ? 'aprobado_simulado' : 'rechazado_aprobador', decision: (aprobado ? 'aprobado' : 'rechazado') + ' por ' + e.alias + ' (v' + e.version + ')' } }];"
    }
   },
   {
-   "id": "57fa7ac1-8d9e-4310-bfcd-d341142c931f",
+   "id": "22396297-ef73-4b3f-9430-4b21edb7fe6c",
    "name": "¿Decisión válida?",
    "type": "n8n-nodes-base.if",
    "typeVersion": 2.2,
@@ -574,7 +782,7 @@
      },
      "conditions": [
       {
-       "id": "618f2d1f-266e-443b-a084-145f656fac81",
+       "id": "5e035ee3-b0a1-4c18-815b-aa9c3c559517",
        "leftValue": "={{ $json.ok }}",
        "rightValue": "",
        "operator": {
@@ -590,7 +798,7 @@
    }
   },
   {
-   "id": "8cf9cb79-9d00-47b5-9f61-c99137c63065",
+   "id": "f8d736f1-1260-4730-a0e7-14b0d7753fa2",
    "name": "Fila decisión",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -603,7 +811,7 @@
    }
   },
   {
-   "id": "aa3457dd-9b3c-4b8f-a927-25d29e6b91e4",
+   "id": "0972baf3-3b95-41cf-a5e6-41fdae273085",
    "name": "Guardar decisión",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -639,7 +847,7 @@
    }
   },
   {
-   "id": "1009fc7d-6cd0-499d-b32e-6cbbcb7f4f6d",
+   "id": "65ce8907-2323-4368-b217-833c07a79553",
    "name": "Traza decisión",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -652,7 +860,7 @@
    }
   },
   {
-   "id": "197a9a50-fdf1-4c5d-a9d1-c909f4e8de58",
+   "id": "56180577-3bbc-4475-97d7-f4832f28729a",
    "name": "Guardar traza decisión",
    "type": "n8n-nodes-base.dataTable",
    "typeVersion": 1.1,
@@ -678,7 +886,7 @@
    }
   },
   {
-   "id": "8d2cfa9d-8eb6-465f-bde6-ca7bc6e52bf1",
+   "id": "1e0f0097-5978-47ea-9cd0-0a027a9b0af8",
    "name": "Confirmar botón",
    "type": "n8n-nodes-base.telegram",
    "typeVersion": 1.2,
@@ -702,7 +910,7 @@
    "onError": "continueRegularOutput"
   },
   {
-   "id": "c78e74cc-1ec6-4cdc-a63f-ea3edd25aa8a",
+   "id": "6da92951-7e05-473a-9bab-a6d64251ff4b",
    "name": "Quitar botones",
    "type": "n8n-nodes-base.telegram",
    "typeVersion": 1.2,
@@ -716,8 +924,10 @@
     "chatId": "={{ $('Validar decisión (servidor)').first().json.chat_aprobador }}",
     "messageId": "={{ $('Validar decisión (servidor)').first().json.message_id }}",
     "replyMarkup": "none",
-    "text": "={{ '✔️ ' + $('Validar decisión (servidor)').first().json.caso_id + ': ' + $('Validar decisión (servidor)').first().json.decision + '. Resultado simulado: no se emitió orden de compra.' }}",
-    "additionalFields": {}
+    "text": "={{ (() => { const d = $('Validar decisión (servidor)').first().json; return (d.aprobado ? '✅ <b>APROBADO</b>' : '❌ <b>RECHAZADO</b>') + ' · ' + d.caso_id + '\\n' + d.concepto + ' · $' + d.monto + '\\n<i>Decidiste tú · simulado, no se emitió orden de compra</i>'; })() }}",
+    "additionalFields": {
+     "parse_mode": "HTML"
+    }
    },
    "credentials": {
     "telegramApi": {
@@ -728,7 +938,7 @@
    "onError": "continueRegularOutput"
   },
   {
-   "id": "ef7b2cae-87bb-46a9-8760-c1845410b0ac",
+   "id": "aa68a5c8-18c3-4ea8-835a-544787765e91",
    "name": "Avisar al solicitante",
    "type": "n8n-nodes-base.telegram",
    "typeVersion": 1.2,
@@ -738,7 +948,7 @@
    ],
    "parameters": {
     "chatId": "={{ $('Validar decisión (servidor)').first().json.chat_solicitante }}",
-    "text": "={{ '📣 ' + $('Validar decisión (servidor)').first().json.caso_id + ': ' + $('Validar decisión (servidor)').first().json.decision + '. Resultado simulado.' }}",
+    "text": "={{ (() => { const d = $('Validar decisión (servidor)').first().json; return (d.aprobado ? '✅ Tu solicitud <b>' + d.caso_id + '</b> fue <b>APROBADA</b>' : '❌ Tu solicitud <b>' + d.caso_id + '</b> fue <b>RECHAZADA</b>') + '\\n' + d.concepto + ' · $' + d.monto + '\\n<i>Simulado: no se emite orden de compra.</i>'; })() }}",
     "additionalFields": {
      "appendAttribution": false,
      "parse_mode": "HTML",
@@ -757,7 +967,7 @@
    "waitBetweenTries": 2000
   },
   {
-   "id": "db601bdc-88ce-4852-8a24-72c9ece0fd05",
+   "id": "7f18ba61-6748-46b2-bf16-c232e3efff47",
    "name": "Rechazar botón",
    "type": "n8n-nodes-base.telegram",
    "typeVersion": 1.2,
@@ -782,17 +992,85 @@
    "onError": "continueRegularOutput"
   },
   {
-   "id": "ca2402fd-a33e-4513-87c2-4191f653ee5d",
-   "name": "Ayuda",
+   "id": "ee5dde16-4cf0-47d4-99a8-91df28d717bb",
+   "name": "Leer caso detalle",
+   "type": "n8n-nodes-base.dataTable",
+   "typeVersion": 1.1,
+   "position": [
+    2200,
+    1040
+   ],
+   "parameters": {
+    "resource": "row",
+    "operation": "get",
+    "dataTableId": {
+     "__rl": true,
+     "mode": "id",
+     "value": "__DT_casos__"
+    },
+    "matchType": "allConditions",
+    "filters": {
+     "conditions": [
+      {
+       "keyName": "caso_id",
+       "condition": "eq",
+       "keyValue": "={{ $json.caso_id }}"
+      }
+     ]
+    },
+    "returnAll": false,
+    "limit": 1
+   },
+   "alwaysOutputData": true
+  },
+  {
+   "id": "964cd860-27c3-43db-bcfa-d1b59ba9f171",
+   "name": "Formatear detalle",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    2420,
+    1040
+   ],
+   "parameters": {
+    "jsCode": "const e = $('Autorizar y enrutar').first().json;\nconst c = $input.all().map(i => i.json).find(x => x.caso_id === e.caso_id);\nconst esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\nlet t;\nif (!c || (c.chat_solicitante && c.chat_solicitante !== e.chat_id && !e.puedeAprobar)) t = 'No encontré ese folio entre tus casos.';\nelse if (c.detalle) t = c.detalle;\nelse t = `🔎 <b>Detalle · ${esc(c.caso_id)}</b>\\n${esc(c.concepto)} · $${Number(c.monto_total || 0).toLocaleString('es-MX')} · ${esc(c.centro_costo)}\\nEstado: ${esc(c.estado)} · recomendación: ${esc(c.recomendacion || 'n/d')} · ${c.llamadas_llm} consultas IA\\n🎬 <a href=\"https://jpcamfer-design.github.io/gastoclaro-mdv/?caso=${esc(c.caso_id)}#caja-negra\">Ver en la caja negra</a>`;\nreturn [{ json: { chat_id: e.chat_id, texto: t, callback_id: e.callback_id } }];"
+   },
+   "executeOnce": true
+  },
+  {
+   "id": "b6b22064-1958-4f08-a998-c27fb5ac18ef",
+   "name": "Confirmar detalle",
    "type": "n8n-nodes-base.telegram",
    "typeVersion": 1.2,
    "position": [
-    2200,
-    620
+    2640,
+    1040
    ],
    "parameters": {
-    "chatId": "={{ $json.chat_id }}",
-    "text": "=<b>GastoClaro · Manufacturas del Valle</b> (empresa ficticia, modo SIMULADO)\n\n/nuevo <i>solicitud</i> – crea un caso. Incluye centro de costo (CC-###), concepto, cantidad, precio unitario MXN sin IVA, urgencia y justificación.\nEj.: /nuevo CC-110 20 rodamientos 6205-2RS a $190 c/u, urgencia alta, vibración en transportador de la línea 2\n\n/estado GAS-0001 – consulta un folio.\nAprobación: botones ✅/❌ (solo aprobadores, expiran en 24 h).",
+    "resource": "callback",
+    "queryId": "={{ $json.callback_id }}",
+    "additionalFields": {}
+   },
+   "credentials": {
+    "telegramApi": {
+     "id": "__CRED_TG__",
+     "name": "Telegram GastoClaro"
+    }
+   },
+   "onError": "continueRegularOutput"
+  },
+  {
+   "id": "9597a12b-9051-42e1-a12d-5e401180c606",
+   "name": "Enviar detalle",
+   "type": "n8n-nodes-base.telegram",
+   "typeVersion": 1.2,
+   "position": [
+    2860,
+    1040
+   ],
+   "parameters": {
+    "chatId": "={{ $('Formatear detalle').first().json.chat_id }}",
+    "text": "={{ $('Formatear detalle').first().json.texto }}",
     "additionalFields": {
      "appendAttribution": false,
      "parse_mode": "HTML",
@@ -810,7 +1088,35 @@
    "waitBetweenTries": 2000
   },
   {
-   "id": "444d360a-3fa0-479a-ba43-e1617d5ab623",
+   "id": "1c7a7e89-5f73-4851-ad88-3e1189d9dedf",
+   "name": "Ayuda",
+   "type": "n8n-nodes-base.telegram",
+   "typeVersion": 1.2,
+   "position": [
+    2200,
+    620
+   ],
+   "parameters": {
+    "chatId": "={{ $json.chat_id }}",
+    "text": "=👋 <b>Hola, soy GastoClaro</b>\nTe ayudo a pedir y aprobar gastos de planta (empresa ficticia, todo simulado).\n━━━━━━━━━━━━━━\n🛒 <b>Para pedir algo</b>, escríbelo normal:\n<i>Necesito 20 rodamientos para la línea 2, CC-110, a $190 cada uno, urgente porque vibra el transportador</i>\n\n🔎 <b>Para consultar</b>, escribe el folio:\n<i>GAS-0018</i>\n\n✅ <b>Si apruebas</b>, te llegan las solicitudes con botones (vencen en 24 h).\n━━━━━━━━━━━━━━\n<i>También funcionan /nuevo, /estado y /ayuda.</i>",
+    "additionalFields": {
+     "appendAttribution": false,
+     "parse_mode": "HTML",
+     "disable_web_page_preview": true
+    }
+   },
+   "credentials": {
+    "telegramApi": {
+     "id": "__CRED_TG__",
+     "name": "Telegram GastoClaro"
+    }
+   },
+   "retryOnFail": true,
+   "maxTries": 3,
+   "waitBetweenTries": 2000
+  },
+  {
+   "id": "ad943b50-5e63-40df-b38f-a06a477c680c",
    "name": "Sin permiso",
    "type": "n8n-nodes-base.telegram",
    "typeVersion": 1.2,
@@ -839,7 +1145,7 @@
    "waitBetweenTries": 2000
   },
   {
-   "id": "344a2539-1c01-4d20-9903-75cea40d8790",
+   "id": "98d028c8-bafc-4a87-9c2c-bd5cdb09fb69",
    "name": "Mensaje de corrección",
    "type": "n8n-nodes-base.code",
    "typeVersion": 2,
@@ -848,11 +1154,11 @@
     900
    ],
    "parameters": {
-    "jsCode": "const e = $input.first().json;\nconst t = e.ruta === 'sin_texto' ? 'Solo proceso texto. Escribe tu solicitud con /nuevo (no fotos, audios ni stickers).'\n  : e.ruta === 'estado_sin_folio' ? 'Indica el folio, por ejemplo: /estado GAS-0001'\n  : e.tipo === 'decision' ? 'Botón no válido.' : 'No entendí el comando. Usa /nuevo, /estado GAS-0001 o /ayuda.';\nreturn [{ json: { chat_id: e.chat_id, texto: t } }];"
+    "jsCode": "const e = $input.first().json;\nconst t = e.ruta === 'sin_texto' ? 'No pude entender eso 🎙️ Mándame una nota de voz de menos de 1 minuto o escríbelo.'\n  : e.ruta === 'estado_sin_folio' ? '¿Qué folio? Escríbelo así: GAS-0018'\n  : e.ruta === 'limite_invitado' ? (e.limite === 'persona' ? '🙌 ¡Gracias por probar GastoClaro! Cada invitado puede mandar 2 solicitudes y ya usaste las tuyas. Mira el resultado en la pantalla.' : '🙌 El demo de hoy ya llegó a su límite de solicitudes. ¡Gracias por participar!')\n  : e.tipo === 'decision' ? 'Botón no válido.' : 'No te entendí 🤔 Dime qué necesitas comprar (con centro de costo, cantidad y precio) o escribe un folio como GAS-0018.';\nreturn [{ json: { chat_id: e.chat_id, texto: t } }];"
    }
   },
   {
-   "id": "9ad1de97-83f4-4716-92fd-275eb4418eee",
+   "id": "d655dc8f-3b87-4510-8f5f-a8d912449bc3",
    "name": "Responder corrección",
    "type": "n8n-nodes-base.telegram",
    "typeVersion": 1.2,
@@ -882,6 +1188,57 @@
  ],
  "connections": {
   "Telegram Trigger": {
+   "main": [
+    [
+     {
+      "node": "Evento crudo",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Evento crudo": {
+   "main": [
+    [
+     {
+      "node": "¿Nota de voz?",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "¿Nota de voz?": {
+   "main": [
+    [
+     {
+      "node": "Descargar audio",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Normalizar evento",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Descargar audio": {
+   "main": [
+    [
+     {
+      "node": "ElevenLabs · voz a texto",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "ElevenLabs · voz a texto": {
    "main": [
     [
      {
@@ -969,6 +1326,17 @@
    "main": [
     [
      {
+      "node": "Casos de invitados",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Casos de invitados": {
+   "main": [
+    [
+     {
       "node": "Autorizar y enrutar",
       "type": "main",
       "index": 0
@@ -1020,6 +1388,13 @@
     [
      {
       "node": "Sin permiso",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Leer caso detalle",
       "type": "main",
       "index": 0
      }
@@ -1188,6 +1563,39 @@
     [
      {
       "node": "Avisar al solicitante",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Leer caso detalle": {
+   "main": [
+    [
+     {
+      "node": "Formatear detalle",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Formatear detalle": {
+   "main": [
+    [
+     {
+      "node": "Confirmar detalle",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Confirmar detalle": {
+   "main": [
+    [
+     {
+      "node": "Enviar detalle",
       "type": "main",
       "index": 0
      }
