@@ -410,7 +410,9 @@ def build_orquestador():
         const c = st.calc, r = st.req, d = st.datos;
         const restr = ['mobiliario de oficina', 'obsequios', 'viajes', 'software'];
         const txt = (r.concepto + ' ' + (r.justificacion || '')).toLowerCase();
-        const catRestr = d.categoria_restringida || restr.find(k => txt.includes(k.split(' ')[0])) || null;
+        // Un ítem del catálogo autorizado nunca es categoría restringida; la opinión del LLM solo cuenta si coincide con la lista oficial
+        const llmRestr = restr.find(k => String(d.categoria_restringida || '').toLowerCase().includes(k.split(' ')[0])) || null;
+        const catRestr = d.item ? null : (llmRestr || restr.find(k => txt.includes(k.split(' ')[0])) || null);
         st.politicas = [
           { id: 'POL-01', tipo: 'bloqueo', ok: c.monto_total <= c.disponible, detalle: `monto ${c.monto_total} vs disponible ${c.disponible}` },
           { id: 'POL-02', tipo: 'devolucion', ok: !(c.monto_total > 50000) || r.cotizaciones >= 2, detalle: `monto ${c.monto_total}; cotizaciones ${r.cotizaciones}` },
