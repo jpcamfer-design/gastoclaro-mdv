@@ -21,3 +21,6 @@ P19,Alta por voz con confirmación,ElevenLabs,Calibraciones CC-310,Pide dato fal
 P20,Webhook de voz sin clave,HTTP,POST sin X-GastoClaro-Key,403,403 Authorization data is wrong!,—,PASA,respuesta HTTP
 P21,Validador bloquea datos incorrectos,GitHub Actions,tests/casos_invalidos.json,exit 1 y no publica,4 errores detectados; exit 1,—,PASA,log Actions
 P22,Briefing de voz diario,Programada,8:00 CDMX,Nota de voz en Telegram,Audio entregado (respaldo de texto probado al fallar la voz),—,PASA,ejec. 29-30
+P23,Revisor marca ítem de catálogo como categoría prohibida,Telegram (nota de voz),5 cajas de guantes de nitrilo CC-410,Aprobable (ítem en catálogo),rechazado_politica por POL-04 (falso positivo del LLM); se corrigió: un ítem de catálogo nunca es restringido,GAS-0022 → GAS-0023,FALLA→CORREGIDO,traza + tablero
+P24,Compra partida sin ítem de catálogo,Voz,3 pedidos de contactores CC-120 en la semana,Detectar por concepto normalizado y rechazar,rechazado_politica; GAS-0019+0020+0021 suman $75400; V1 devuelta por el servidor y V2 validada,GAS-0021,PASA,E14
+P25,Nota de voz en Telegram (voz a texto),Telegram,Audio pidiendo guantes,Transcribir y crear caso,Transcrito con ElevenLabs Scribe; caso creado y respuesta 'Te entendí',GAS-0022,PASA,Telegram
