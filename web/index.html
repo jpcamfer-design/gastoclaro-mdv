@@ -43,7 +43,9 @@ button{font:inherit;color:inherit}
 /* layout */
 main{padding:14px 0 40px}
 .grid{display:grid;gap:14px}
-.k4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.k4{grid-template-columns:repeat(4,minmax(0,1fr))}.k3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.pk{border:1px solid var(--line);border-radius:12px;padding:12px}.pk .lab{font-size:12.5px;color:var(--ink2);font-weight:600}.pk .val{font-size:24px;font-weight:800;margin:4px 0}.pk .goal{font-size:12.5px;color:var(--ink2)}
+.pk details{margin-top:6px;font-size:12.5px;color:var(--ink2)}.pk summary{cursor:pointer;color:var(--info)}.pk dl{display:grid;grid-template-columns:auto 1fr;gap:2px 8px;margin:6px 0 0}.pk dt{font-weight:600;color:var(--ink)}.pk dd{margin:0}
 .c21{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);padding:16px;min-width:0}
 .card h2{font-size:15px;margin:0}
@@ -136,7 +138,7 @@ h4{font-size:13px;margin:18px 0 6px;color:var(--ink2);text-transform:uppercase;l
 .vozdlg{position:fixed;left:16px;bottom:64px;z-index:31;width:min(360px,calc(100% - 32px));background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:0 12px 40px -12px rgba(0,0,0,.35);display:none;font-size:13px}
 .vozdlg.open{display:block}
 .vozdlg label{display:flex;gap:8px;margin:10px 0}
-@media (max-width:1000px){.k4{grid-template-columns:repeat(2,minmax(0,1fr))}.c21{grid-template-columns:1fr}}
+@media (max-width:1000px){.k3{grid-template-columns:1fr}.k4{grid-template-columns:repeat(2,minmax(0,1fr))}.c21{grid-template-columns:1fr}}
 @media (max-width:640px){.k4{grid-template-columns:1fr}.area{grid-template-columns:1fr 54px;grid-template-areas:"nm pct" "bar bar" "disp disp"}.area .nm{grid-area:nm}.area .bar{grid-area:bar}.area .pct{grid-area:pct}.area .disp{grid-area:disp;text-align:left}.donut{grid-template-columns:1fr;justify-items:center}.hide-m{display:none}.qr{display:none!important}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -153,7 +155,8 @@ h4{font-size:13px;margin:18px 0 6px;color:var(--ink2);text-transform:uppercase;l
 </header>
 
 <main class="wrap">
-  <div class="demo">Piloto académico con datos ficticios. Las aprobaciones son simuladas: no se emiten órdenes de compra.</div>
+  <div class="demo"><b>Propósito:</b> decidir con evidencia si un gasto se aprueba, se corrige o se frena · <b>Fuente:</b> registro de n8n, exportación sin datos personales · <b>Datos ficticios</b>; aprobaciones simuladas, no se emiten órdenes de compra.</div>
+  <div id="stale" class="empty" hidden role="status" style="margin-top:10px;background:var(--warn-soft);color:var(--warn);border-radius:10px;padding:10px"></div>
 
   <section class="grid k4" id="kpis" aria-label="Resumen del mes"></section>
 
@@ -174,6 +177,11 @@ h4{font-size:13px;margin:18px 0 6px;color:var(--ink2);text-transform:uppercase;l
     <div class="areas" id="areas"></div>
   </section>
 
+  <section class="card">
+    <div class="head"><h2>Indicadores del proceso</h2><span class="hint">Medido con las solicitudes del piloto · la meta es el objetivo, no un resultado</span></div>
+    <div class="grid k3" id="proc"></div>
+  </section>
+
   <section class="grid c21">
     <div class="card">
       <div class="head"><h2>Actividad reciente</h2><span class="hint">Toca una para ver cómo se decidió</span></div>
@@ -192,6 +200,7 @@ h4{font-size:13px;margin:18px 0 6px;color:var(--ink2);text-transform:uppercase;l
         <select id="f-g" aria-label="Filtrar por resultado"></select>
         <select id="f-a" aria-label="Filtrar por área"></select>
         <input id="f-q" type="search" placeholder="Buscar folio o concepto" aria-label="Buscar">
+        <button class="btn" id="f-r" type="button">Restablecer</button>
       </div></div>
     <div class="scroll" id="tabla"></div>
   </section>
@@ -281,6 +290,18 @@ function render() {
     `<div class="card kpi"><div class="lab">✅ Aprobado en el mes</div><div class="val num">${mx(apr.reduce((s, c) => s + (+c.monto_total || 0), 0))}</div><div class="sub">${apr.length} ${apr.length === 1 ? 'solicitud aprobada' : 'solicitudes aprobadas'} por el Budget Owner</div></div>` +
     `<div class="card kpi acc"><div class="lab">🛡️ Gasto frenado por las reglas</div><div class="val num" id="k-fr">${mx(fr.total)}</div><div class="sub num">Compras partidas ${mx(fr.partida)} · Sin presupuesto ${mx(fr.presupuesto)} · Sobreprecio ${mx(fr.precio)}</div></div>` +
     `<div class="card kpi"><div class="lab">📊 Presupuesto de la planta</div><div class="val num">${(U / P * 100).toFixed(0)}%<small>usado</small></div><div class="meter"><i style="width:${w(prev)};background:var(--s1)"></i><i style="width:${w(apM)};background:var(--s2)"></i><i style="width:${w(peM)};background:var(--s3)"></i></div><div class="sub num">Quedan ${mx(P - U)} de ${mx(P)}</div></div>`;
+  // Indicadores del proceso (definidos en el informe)
+  const med = a => { if (!a.length) return null; const z = [...a].sort((x, y) => x - y), m = Math.floor(z.length / 2); return z.length % 2 ? z[m] : (z[m - 1] + z[m]) / 2; };
+  const ciclos = casos.filter(c => c.decidido_en && ['aprobado_simulado', 'rechazado_aprobador'].includes(c.estado)).map(c => (new Date(c.decidido_en) - new Date(c.creado)) / 6e4).filter(x => x >= 0);
+  const rev = casos.filter(c => c.veredicto), pri = rev.filter(c => c.veredicto === 'aprobado' && Number(c.version) === 1);
+  const comp = casos.filter(c => c.veredicto), cm = comp.length ? comp.reduce((s, c) => s + (+c.costo_est_usd || 0), 0) / comp.length : null;
+  const mc = med(ciclos);
+  const pk = (lab, val, goal, f, den, lect, n) => `<div class="pk"><div class="lab">${lab}</div><div class="val num">${val === null ? '<span class="tag t-mut">Sin datos suficientes</span>' : val}</div><div class="goal">${goal} · n = ${n}</div><details><summary>Cómo se mide</summary><dl><dt>Fórmula</dt><dd>${f}</dd><dt>Base</dt><dd>${den}</dd><dt>Lectura</dt><dd>${lect}</dd></dl></details></div>`;
+  $('#proc').innerHTML = pk('⏱️ Tiempo hasta la decisión (mediana)', mc === null ? null : (mc < 60 ? Math.round(mc) + ' min' : (mc / 60).toFixed(1) + ' h'), 'Meta: ≤ 4 h', 'mediana(hora de decisión − hora de solicitud)', 'solicitudes aprobadas o rechazadas por una persona', 'Menor es mejor: mide la espera total, no solo la IA.', ciclos.length) +
+    pk('🎯 Propuestas correctas al primer intento', rev.length ? Math.round(pri.length / rev.length * 100) + '%' : null, 'Meta: ≥ 70 %', 'aprobadas por el revisor en la versión 1 ÷ revisadas', 'solicitudes que llegaron al agente revisor', 'Bajo = el loop de calidad corrige más y cuesta más.', rev.length) +
+    pk('💵 Costo de IA por solicitud', cm === null ? null : '$' + cm.toFixed(4) + ' USD', 'Medido en logs: ≈ $0.0005 por caso normal', 'Σ costo de IA ÷ solicitudes revisadas', 'solicitudes que llegaron al agente revisor', 'Incluye correcciones del loop. No incluye plataformas.', comp.length);
+  const hs = (Date.now() - gen) / 36e5, stl = $('#stale');
+  if (!LIVE && hs > 48) { stl.hidden = false; stl.textContent = `⚠️ Los datos tienen ${Math.round(hs)} h sin actualizarse (lo esperado es menos de 24 h). Las cifras pueden no reflejar el registro actual.`; } else stl.hidden = true;
   // Por aprobar
   $('#pend').innerHTML = pend.length ? `<table><thead><tr><th>Folio</th><th>Qué se pide</th><th class="hide-m">Área</th><th class="r">Monto</th><th>La IA recomienda</th><th class="hide-m">Vence</th></tr></thead><tbody>` +
     pend.sort((a, b) => new Date(a.creado) - new Date(b.creado)).map(c => { const v = new Date(new Date(c.creado).getTime() + 864e5); const h = Math.round((v - Date.now()) / 36e5);
@@ -331,7 +352,7 @@ function tabla() {
     rows.map(c => `<tr data-id="${esc(c.caso_id)}"><td class="mono">${esc(c.caso_id)}</td><td class="concept">${esc(cap(c.concepto))}</td><td class="hide-m">${esc(area(c.centro_costo))}</td><td class="r num">${c.monto_total ? mx(c.monto_total) : '—'}</td><td>${tag(c.estado)}</td><td class="hide-m" style="color:var(--ink2)">${hace(c.creado)}</td></tr>`).join('') + '</tbody></table>'
     : '<div class="empty">Ninguna solicitud con esos filtros.</div>';
 }
-['#f-g', '#f-a'].forEach(s => $(s).addEventListener('change', tabla)); $('#f-q').addEventListener('input', tabla);
+['#f-g', '#f-a'].forEach(s => $(s).addEventListener('change', tabla)); $('#f-r').onclick = () => { $('#f-g').value = ''; $('#f-a').value = ''; $('#f-q').value = ''; tabla(); }; $('#f-q').addEventListener('input', tabla);
 
 // ---------- Panel de detalle: qué se pidió, reglas y cómo decidió la IA ----------
 function paso(t) {
