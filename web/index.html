@@ -165,6 +165,17 @@ footer{border-top:1px solid var(--line);margin-top:28px;padding:18px 0 40px;colo
 .qr p{margin:0;font-size:13px;color:var(--ink2)}
 @media (max-width:980px){.live{grid-template-columns:1fr}.mini{grid-template-columns:1fr 1fr 1fr}}
 @media (prefers-reduced-motion:reduce){.feed li.new,.lv-btn[aria-pressed="true"] .lv-dot{animation:none}}
+
+.pasos{margin:18px 0}
+.steps{list-style:none;margin:10px 0 0;padding:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;counter-reset:s}
+.steps li{position:relative;background:var(--muted);border-radius:12px;padding:12px 12px 12px 12px;font-size:13px;color:var(--ink2);line-height:1.4}
+.steps li b{display:block;color:var(--ink);font-size:14.5px;margin:6px 0 4px}
+.steps .n{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--acc);color:var(--acc-ink);font-weight:800;font-size:13px}
+.steps li:not(:last-child)::after{content:"→";position:absolute;right:-10px;top:50%;transform:translateY(-50%);color:var(--ink2);font-weight:700}
+.trust{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:12px;font-size:13px;color:var(--ink2)}
+.trust div{border-top:1px solid var(--line);padding-top:8px}
+.trust b{color:var(--ink)}
+@media (max-width:980px){.steps{grid-template-columns:1fr}.steps li:not(:last-child)::after{content:"↓";right:auto;left:50%;top:auto;bottom:-14px;transform:none}.trust{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
@@ -181,21 +192,38 @@ footer{border-top:1px solid var(--line);margin-top:28px;padding:18px 0 40px;colo
 </header>
 <main class="wrap" id="main">
   <div class="hero">
-    <h1>Cada solicitud de gasto llega al Budget Owner validada, comparada contra presupuesto y revisada contra política.</h1>
-    <p>Un orquestador y cuatro agentes especializados procesan la solicitud en Telegram o por voz. El Budget Owner aprueba o rechaza con botones; nada se compra: es un piloto simulado.</p>
+    <h1>Un asistente con IA que revisa cada gasto de la planta antes de que alguien lo apruebe.</h1>
+    <p>Alguien pide algo por Telegram o por voz. Cuatro agentes de IA revisan precio, presupuesto y 7 reglas de la empresa, y le llevan al responsable una recomendación clara. <b>La IA no decide: una persona aprueba con un botón.</b> Todo es un piloto con datos ficticios.</p>
     <div class="meta" id="meta">
-      <div><b>Propósito</b>Decidir aprobar, devolver o rechazar gastos con evidencia</div>
+      <div><b>Para qué sirve</b>Decidir con evidencia si un gasto se aprueba, se corrige o se frena</div>
       <div><b>Periodo</b><span id="m-periodo">—</span></div>
-      <div><b>Fuente</b>Exportación sanitizada de n8n Data Tables</div>
+      <div><b>Datos</b>Registro del sistema, sin nombres ni conversaciones</div>
       <div><b>Actualización</b><span id="m-gen">—</span></div>
     </div>
   </div>
+
+  <section aria-labelledby="h-pasos" class="card pasos">
+    <h2 id="h-pasos">Cómo funciona, en 5 pasos</h2>
+    <ol class="steps">
+      <li><span class="n">1</span><b>📱 Alguien pide</b>Escribe o manda un audio: “necesito 20 rodamientos para la línea 2…”</li>
+      <li><span class="n">2</span><b>🧾 Se ordena</b>Un agente entiende qué, cuánto y para qué. Si falta un dato, lo pregunta.</li>
+      <li><span class="n">3</span><b>🔍 Se compara</b>Otro busca el precio autorizado y cuánto presupuesto le queda al área.</li>
+      <li><span class="n">4</span><b>🛡️ Se revisa</b>Un agente propone y otro lo audita contra 7 reglas. Si algo no cuadra, lo regresa a corregir (hasta 3 veces).</li>
+      <li><span class="n">5</span><b>✅ Una persona decide</b>Le llega una tarjeta con la recomendación y botones. Todo queda registrado.</li>
+    </ol>
+    <div class="trust">
+      <div>🚨 <b>Detecta compras partidas</b> para evitar cotizaciones</div>
+      <div>🧮 <b>Los números los calcula el código</b>, no la IA</div>
+      <div>🔒 <b>Bloquea intentos de engaño</b> antes de usar la IA</div>
+      <div>💸 <b>Tiene tope de costo</b> por solicitud</div>
+    </div>
+  </section>
 
   <div id="stale" hidden class="notice n-bad" role="status"></div>
   <div class="alerts" id="alerts"></div>
 
   <section aria-labelledby="h-live">
-    <div class="live-h"><h2 id="h-live">Sala de control</h2>
+    <div class="live-h"><h2 id="h-live">En vivo: lo que está pasando ahora</h2>
       <button class="lv-btn" id="lv-btn" type="button" aria-pressed="false"><span class="lv-dot"></span><span id="lv-txt">Activar en vivo</span></button></div>
     <div class="live">
       <div class="card prot">
@@ -212,12 +240,13 @@ footer{border-top:1px solid var(--line);margin-top:28px;padding:18px 0 40px;colo
         <a class="mono" id="qr-link" href="https://t.me/IAToolsN8N_bot?start=demo" target="_blank" rel="noopener">t.me/IAToolsN8N_bot</a>
       </div>
     </div>
+    <p class="sub">El número verde es dinero que las reglas impidieron gastar. Cada solicitud nueva aparece abajo en segundos.</p>
     <div class="card"><div class="lab" style="font-size:12.5px;color:var(--ink2);font-weight:600;margin-bottom:8px">ÚLTIMAS SOLICITUDES</div><ul class="feed" id="feed" aria-live="polite"></ul></div>
   </section>
 
   <section aria-labelledby="h-kpi">
-    <h2 id="h-kpi">Indicadores del proceso</h2>
-    <p class="sub">Medidos sobre los casos registrados. Las metas son objetivo del piloto, no resultados.</p>
+    <h2 id="h-kpi">¿Qué tan bien trabaja?</h2>
+    <p class="sub">Tres medidas simples sobre las solicitudes reales del piloto. La meta es lo que buscamos; el número grande es lo que pasó.</p>
     <div class="grid k3" id="kpis" aria-live="polite">
       <div class="card kpi"><div class="state">Cargando indicadores…</div></div>
       <div class="card kpi"><div class="state">Cargando…</div></div>
@@ -227,22 +256,22 @@ footer{border-top:1px solid var(--line);margin-top:28px;padding:18px 0 40px;colo
 
   <section class="grid two" aria-label="Visualizaciones">
     <div class="card">
-      <h2>¿Qué centro de costo está cerca de su límite?</h2>
-      <p class="sub">Consumo del presupuesto mensual: comprometido previo + casos aprobados (simulado) + pendientes de aprobación.</p>
+      <h2>¿Cómo van los presupuestos de cada área?</h2>
+      <p class="sub">Cada barra es un área de la planta. <b>Gris</b>: ya gastado antes · <b>verde</b>: aprobado aquí · <b>amarillo</b>: esperando aprobación. La línea marca el 100 %.</p>
       <div class="bars" id="bars" role="list"><div class="state">Cargando…</div></div>
       <div class="legend" aria-hidden="true"><span><i class="s1"></i>Comprometido previo</span><span><i class="s2"></i>Aprobado (simulado)</span><span><i class="s3"></i>Pendiente de aprobación</span><span><i style="background:var(--bad);width:2px"></i>100 %</span></div>
       <table class="sr" id="bars-table"></table>
     </div>
     <div class="card">
-      <h2>¿Dónde termina cada solicitud?</h2>
-      <p class="sub">Distribución de casos por estado final. Los controles detienen o devuelven lo que no cumple.</p>
+      <h2>¿Cómo terminó cada solicitud?</h2>
+      <p class="sub">No todo se aprueba: aquí se ve cuántas frenaron las reglas, cuántas se devolvieron para corregir y cuántas aprobó una persona.</p>
       <div class="flow" id="flow"><div class="state">Cargando…</div></div>
     </div>
   </section>
 
   <section id="casos" aria-labelledby="h-casos">
-    <h2 id="h-casos">Historial de casos (sanitizado)</h2>
-    <p class="sub">Sin nombres, chats ni conversaciones. Selecciona un caso para ver la traza de los agentes.</p>
+    <h2 id="h-casos">Todas las solicitudes</h2>
+    <p class="sub">Toca una fila para ver qué hizo cada agente. No se muestran nombres ni conversaciones.</p>
     <div class="controls" role="search">
       <label>Estado<select id="f-estado"><option value="">Todos</option></select></label>
       <label>Centro de costo<select id="f-cc"><option value="">Todos</option></select></label>
@@ -267,7 +296,7 @@ footer{border-top:1px solid var(--line);margin-top:28px;padding:18px 0 40px;colo
 
   <section class="bb" id="caja-negra" aria-labelledby="h-bb">
     <div class="bb-top">
-      <div><h2 id="h-bb">Caja negra · repetición de un caso</h2><p class="sub" style="margin:0">Reproduce paso a paso lo que hicieron el orquestador y los 4 agentes, con su costo. Datos reales de la traza (sanitizada).</p></div>
+      <div><h2 id="h-bb">Caja negra: repite cómo decidió la IA</h2><p class="sub" style="margin:0">Elige un folio y pulsa Reproducir. Verás, paso por paso, qué hizo cada agente, cuándo el revisor pidió corregir y cuánto costó. Prueba con uno marcado 🚨.</p></div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><label class="sr" for="bb-sel">Folio</label><select id="bb-sel"></select><button id="bb-play" type="button">▶ Reproducir</button></div>
     </div>
     <div class="bb-pipe" aria-hidden="true">
@@ -284,7 +313,7 @@ footer{border-top:1px solid var(--line);margin-top:28px;padding:18px 0 40px;colo
   </section>
 
   <section class="card" aria-labelledby="h-voz">
-    <h2 id="h-voz">Asistente de voz</h2>
+    <h2 id="h-voz">Pregúntale por voz</h2>
     <div class="voice">
       <div>
         <p class="sub" style="margin-bottom:10px">Consulta el estado de un folio o registra una solicitud nueva hablando. Responde con datos del mismo registro que usa Telegram.</p>
@@ -304,7 +333,7 @@ footer{border-top:1px solid var(--line);margin-top:28px;padding:18px 0 40px;colo
   </section>
 
   <section class="card" aria-labelledby="h-arch">
-    <h2 id="h-arch">Cómo funciona</h2>
+    <h2 id="h-arch">Detalle técnico</h2>
     <p class="sub">Un mismo <span class="mono">caso_id</span> recorre todos los componentes.</p>
     <div class="arch">
       <div><b>Entrada</b>Telegram o voz → n8n valida usuario, deduplica y asigna folio</div>
@@ -384,11 +413,11 @@ function render(){
     <div class="goal">${goal} · n = ${n}</div>
     <details><summary>Definición</summary><dl><dt>Fórmula</dt><dd>${f}</dd><dt>Denominador</dt><dd>${den}</dd><dt>Fuente</dt><dd>${fuente}</dd><dt>Lectura</dt><dd>${lect}</dd></dl></details></div>`;
   $('#kpis').innerHTML =
-    kpi('Tiempo de ciclo de aprobación (mediana)', mCiclo===null?null:mCiclo.toLocaleString('es-MX',{maximumFractionDigits:2}),'h','Meta del piloto: ≤ 4 h',
+    kpi('⏱️ Tiempo hasta que una persona decide', mCiclo===null?null:mCiclo.toLocaleString('es-MX',{maximumFractionDigits:2}),'h','Meta del piloto: ≤ 4 h',
       'mediana(decidido_en − creado)','casos con decisión humana (aprobado o rechazado)','mdv_casos','Menor es mejor. Mide la espera total, no solo el tiempo de IA.',ciclos.length) +
-    kpi('Liberadas en la primera revisión', pPrimera===null?null:pPrimera.toFixed(0),'%','Meta del piloto: ≥ 70 %',
+    kpi('🎯 Propuestas correctas al primer intento', pPrimera===null?null:pPrimera.toFixed(0),'%','Meta del piloto: ≥ 70 %',
       'casos con veredicto A4 "aprobado" en v1 ÷ casos revisados','casos que llegaron a A4','mdv_casos.veredicto, version','Bajo = A3 propone mal y el loop de calidad trabaja más (más costo).',revisados.length) +
-    kpi('Costo de IA por caso completo', cMedio===null?null:'$'+cMedio.toFixed(5),'USD','Estimado; ver costos.csv para el medido',
+    kpi('💵 Costo de IA por solicitud', cMedio===null?null:'$'+cMedio.toFixed(5),'USD','Estimado; ver costos.csv para el medido',
       'Σ costo_est_usd ÷ casos completos','casos que llegaron a A4','mdv_casos.costo_est_usd (tarifa de lista gpt-4o-mini)','Incluye reintentos del loop. No incluye plataforma (n8n, ElevenLabs).',completos.length);
 
   // Barras de presupuesto
@@ -426,8 +455,8 @@ function render(){
   table(); bbInit(); renderLive();
   const frs = casos.filter(c=>(c.politicas||[]).some(p=>p.id==='POL-07'&&!p.ok));
   const crit = (D.presupuesto||[]).map(p=>{const t=p.comprometido+casos.filter(c=>c.centro_costo===p.centro_costo&&['aprobado_simulado','pendiente_aprobacion'].includes(c.estado)).reduce((s,c)=>s+(+c.monto_total||0),0);return {cc:p.centro_costo,pct:t/p.presupuesto_mensual*100}}).filter(x=>x.pct>=90);
-  $('#alerts').innerHTML = (frs.length?`<div class="notice n-bad">🚨 <b>Posible fraccionamiento</b> (POL-07): ${frs.map(c=>esc(c.caso_id)).join(', ')}</div>`:'<div class="notice n-info">🛡️ Detector de fraccionamiento activo: sin alertas</div>') +
-    (crit.length?`<div class="notice n-warn">🟡 <b>Cerca del límite</b>: ${crit.map(c=>esc(c.cc)+' '+c.pct.toFixed(0)+'%').join(' · ')}</div>`:'');
+  $('#alerts').innerHTML = (frs.length?`<div class="notice n-bad">🚨 <b>Posible compra partida</b> (alguien dividió una compra para no pedir cotizaciones): ${frs.map(c=>esc(c.caso_id)).join(', ')}</div>`:'<div class="notice n-info">🛡️ Detector de compras partidas activo: sin alertas</div>') +
+    (crit.length?`<div class="notice n-warn">🟡 <b>Áreas casi sin presupuesto</b>: ${crit.map(c=>esc(c.cc)+' '+c.pct.toFixed(0)+'%').join(' · ')}</div>`:'');
   const cs = completos.reduce((s,c)=>s+(+c.costo_est_usd||0),0);
   $('#costo-nota').innerHTML = `Costo de IA estimado acumulado: <b>$${cs.toFixed(5)} USD</b> en ${casos.reduce((s,c)=>s+(+c.llamadas_llm||0),0)} llamadas al modelo. La tarifa y el método están en <span class="mono">costos/</span>.`;
 }
@@ -564,7 +593,7 @@ async function pollLive(){
 }
 function setLive(on){
   LIVE = on; $('#lv-btn').setAttribute('aria-pressed', on?'true':'false'); clearInterval(liveTimer);
-  if(on){ pollLive(); liveTimer = setInterval(()=>{ if(!document.hidden) pollLive(); }, 10000); } else if($('#lv-txt').textContent.startsWith('En vivo ·')) $('#lv-txt').textContent='Activar en vivo';
+  if(on){ pollLive(); const t0=Date.now(); liveTimer = setInterval(()=>{ if(Date.now()-t0>45*60e3){ setLive(false); return; } if(!document.hidden) pollLive(); }, 20000); } else if($('#lv-txt').textContent.startsWith('En vivo ·')) $('#lv-txt').textContent='Activar en vivo';
 }
 $('#lv-btn').addEventListener('click',()=>setLive(!LIVE));
 (function qr(){
