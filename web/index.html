@@ -131,6 +131,40 @@ footer{border-top:1px solid var(--line);margin-top:28px;padding:18px 0 40px;colo
 @media (max-width:520px){.bar-row{grid-template-columns:96px 1fr 52px}.flow-row{grid-template-columns:120px 1fr 28px}.kpi .val{font-size:30px}
   .hide-m{display:none}th,td{padding:9px 8px}select,input[type=search]{min-width:0;width:100%}.controls label{flex:1 1 140px}}
 @media (prefers-reduced-motion:no-preference){.seg{transition:width .5s ease}}
+
+/* Sala de control en vivo */
+.live{display:grid;grid-template-columns:1.25fr .75fr;gap:16px;margin:18px 0}
+.live-h{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.live-h h2{margin:0}
+.lv-btn{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:999px;padding:6px 14px;font-weight:600;cursor:pointer}
+.lv-btn[aria-pressed="true"]{background:var(--bad);color:#fff;border-color:var(--bad)}
+.lv-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:currentColor;margin-right:6px;vertical-align:1px}
+.lv-btn[aria-pressed="true"] .lv-dot{animation:blink 1.2s infinite}
+@keyframes blink{50%{opacity:.25}}
+.prot{display:flex;flex-direction:column;gap:12px}
+.prot .lab{font-size:12.5px;color:var(--ink2);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.prot .big{font-size:clamp(34px,6vw,56px);font-weight:800;line-height:1;font-variant-numeric:tabular-nums;color:var(--acc)}
+.prot .big small{font-size:16px;color:var(--ink2);font-weight:600;margin-left:6px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);border-radius:10px;padding:8px 10px;min-width:120px;background:var(--muted)}
+.chip b{display:block;font-size:17px;font-variant-numeric:tabular-nums}
+.chip span{font-size:12px;color:var(--ink2)}
+.mini{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.mini div{border-top:1px solid var(--line);padding-top:8px}
+.mini b{display:block;font-size:20px;font-variant-numeric:tabular-nums}
+.mini span{font-size:12px;color:var(--ink2)}
+.feed{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;max-height:330px;overflow:auto}
+.feed li{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:8px 10px;border-radius:10px;background:var(--muted);font-size:13.5px}
+.feed li.new{animation:pop 2.4s ease-out}
+@keyframes pop{0%{background:var(--acc-soft);transform:translateY(-6px)}100%{background:var(--muted);transform:none}}
+.feed .ic{font-size:18px}
+.feed .t{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.feed .m{font-variant-numeric:tabular-nums;font-weight:700}
+.qr{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px}
+.qr #qrbox{background:#fff;padding:10px;border-radius:12px;line-height:0}
+.qr p{margin:0;font-size:13px;color:var(--ink2)}
+@media (max-width:980px){.live{grid-template-columns:1fr}.mini{grid-template-columns:1fr 1fr 1fr}}
+@media (prefers-reduced-motion:reduce){.feed li.new,.lv-btn[aria-pressed="true"] .lv-dot{animation:none}}
 </style>
 </head>
 <body>
@@ -159,6 +193,27 @@ footer{border-top:1px solid var(--line);margin-top:28px;padding:18px 0 40px;colo
 
   <div id="stale" hidden class="notice n-bad" role="status"></div>
   <div class="alerts" id="alerts"></div>
+
+  <section aria-labelledby="h-live">
+    <div class="live-h"><h2 id="h-live">Sala de control</h2>
+      <button class="lv-btn" id="lv-btn" type="button" aria-pressed="false"><span class="lv-dot"></span><span id="lv-txt">Activar en vivo</span></button></div>
+    <div class="live">
+      <div class="card prot">
+        <div><div class="lab">Gasto frenado por las reglas</div>
+          <div class="big" id="prot-total">—<small>MXN</small></div></div>
+        <div class="chips" id="prot-chips"></div>
+        <div class="mini" id="live-mini"></div>
+        <details><summary>Cómo se calcula</summary><p class="sub" style="margin:6px 0 0">Suma de lo que el sistema impidió gastar: monto completo de solicitudes rechazadas por política (compra partida, sin presupuesto, categoría restringida) y, en las devueltas por precio, solo el sobreprecio (precio pedido − referencia) × cantidad. No incluye lo escalado ni lo que rechazó una persona. Montos ficticios.</p></details>
+      </div>
+      <div class="card qr" id="qr-card">
+        <b>Pruébalo tú</b>
+        <div id="qrbox" aria-hidden="true"></div>
+        <p>Escanea y escríbele al bot lo que necesitas comprar, como lo dirías normal. Máximo 2 solicitudes por persona; las aprobaciones las decide el Budget Owner.</p>
+        <a class="mono" id="qr-link" href="https://t.me/IAToolsN8N_bot?start=demo" target="_blank" rel="noopener">t.me/IAToolsN8N_bot</a>
+      </div>
+    </div>
+    <div class="card"><div class="lab" style="font-size:12.5px;color:var(--ink2);font-weight:600;margin-bottom:8px">ÚLTIMAS SOLICITUDES</div><ul class="feed" id="feed" aria-live="polite"></ul></div>
+  </section>
 
   <section aria-labelledby="h-kpi">
     <h2 id="h-kpi">Indicadores del proceso</h2>
@@ -210,7 +265,7 @@ footer{border-top:1px solid var(--line);margin-top:28px;padding:18px 0 40px;colo
     </div>
   </section>
 
-  <section class="bb" aria-labelledby="h-bb">
+  <section class="bb" id="caja-negra" aria-labelledby="h-bb">
     <div class="bb-top">
       <div><h2 id="h-bb">Caja negra · repetición de un caso</h2><p class="sub" style="margin:0">Reproduce paso a paso lo que hicieron el orquestador y los 4 agentes, con su costo. Datos reales de la traza (sanitizada).</p></div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><label class="sr" for="bb-sel">Folio</label><select id="bb-sel"></select><button id="bb-play" type="button">▶ Reproducir</button></div>
@@ -368,7 +423,7 @@ function render(){
   fe.innerHTML='<option value="">Todos</option>'+Object.keys(cnt).map(k=>`<option value="${esc(k)}">${esc((ESTADOS[k]||[k])[0])}</option>`).join('');
   fc.innerHTML='<option value="">Todos</option>'+[...new Set(casos.map(c=>c.centro_costo).filter(Boolean))].sort().map(k=>`<option>${esc(k)}</option>`).join('');
   try{const f=JSON.parse(sessionStorage.getItem('gc-f')||'{}'); fe.value=f.e||''; fc.value=f.c||''; $('#f-q').value=f.q||'';}catch(e){}
-  table(); bbInit();
+  table(); bbInit(); renderLive();
   const frs = casos.filter(c=>(c.politicas||[]).some(p=>p.id==='POL-07'&&!p.ok));
   const crit = (D.presupuesto||[]).map(p=>{const t=p.comprometido+casos.filter(c=>c.centro_costo===p.centro_costo&&['aprobado_simulado','pendiente_aprobacion'].includes(c.estado)).reduce((s,c)=>s+(+c.monto_total||0),0);return {cc:p.centro_costo,pct:t/p.presupuesto_mensual*100}}).filter(x=>x.pct>=90);
   $('#alerts').innerHTML = (frs.length?`<div class="notice n-bad">🚨 <b>Posible fraccionamiento</b> (POL-07): ${frs.map(c=>esc(c.caso_id)).join(', ')}</div>`:'<div class="notice n-info">🛡️ Detector de fraccionamiento activo: sin alertas</div>') +
@@ -397,8 +452,12 @@ let bbTimer=null;
 function bbInit(){
   const sel=$('#bb-sel'); const cs=(DATA.casos||[]).filter(c=>(DATA.trazas||[]).some(t=>t.caso_id===c.caso_id)).sort((a,b)=>b.caso_id.localeCompare(a.caso_id));
   sel.innerHTML = cs.length ? cs.map(c=>`<option value="${esc(c.caso_id)}">${esc(c.caso_id)} · ${esc((ESTADOS[c.estado]||[c.estado])[0])}</option>`).join('') : '<option>Sin casos</option>';
-  const pref = cs.find(c=>Number(c.iteraciones)>1) || cs[0]; if(pref) sel.value=pref.caso_id;
+  const prev = sel.dataset.v; const pref = (prev && cs.find(c=>c.caso_id===prev)) || cs.find(c=>Number(c.iteraciones)>1) || cs[0]; if(pref) sel.value=pref.caso_id;
+  sel.onchange=()=>{ sel.dataset.v=sel.value; };
   $('#bb-play').disabled=!cs.length;
+  // Enlace directo desde Telegram (?caso=GAS-0018): selecciona y reproduce ese folio
+  let q=''; try{ q=new URLSearchParams(location.search).get('caso')||''; }catch(e){}
+  if(q && !window.__casoHecho && cs.some(c=>c.caso_id===q)){ window.__casoHecho=true; sel.value=q; setTimeout(()=>{ document.getElementById('caja-negra').scrollIntoView({behavior:'smooth'}); bbPlay(); },400); }
 }
 function bbPlay(){
   clearTimeout(bbTimer);
@@ -460,7 +519,60 @@ $('#start-voz').addEventListener('click',async()=>{
     $('#widget-slot').appendChild(w); $('#consent').querySelectorAll('input,button').forEach(x=>x.disabled=true);
   }catch(e){ msg.className='notice n-bad'; msg.textContent='Error al iniciar la voz: '+e.message; }
 });
-load();
+
+// ---------- Sala de control en vivo ----------
+const LIVE_URL = 'https://jpjpcamacho.app.n8n.cloud/webhook/gastoclaro-live'; // exportación sanitizada, solo lectura
+let LIVE = false, liveTimer = null, VISTOS = null;
+const ICON = {pendiente_aprobacion:'⏳',aprobado_simulado:'✅',rechazado_aprobador:'❌',rechazado_politica:'⛔',devuelto_solicitante:'↩️',escalado_gerencia:'⬆️',requiere_aclaracion:'✍️',rechazado_entrada:'🛡️',detenido_presupuesto:'🛑',detenido_calidad:'🛑',error_controlado:'⚠️',expirado:'⌛',en_proceso:'⚙️'};
+function protegido(casos){
+  const fall = c => (c.politicas||[]).filter(p=>!p.ok).map(p=>p.id);
+  const r = {partida:0, presupuesto:0, precio:0, otras:0};
+  for(const c of casos){
+    const f = fall(c), m = +c.monto_total||0;
+    if(c.estado==='rechazado_politica'){ if(f.includes('POL-07')) r.partida+=m; else if(f.includes('POL-01')) r.presupuesto+=m; else r.otras+=m; }
+    else if(c.estado==='devuelto_solicitante' && f.includes('POL-03') && c.precio_ref) r.precio += Math.max(0,(c.precio_unitario-c.precio_ref)*c.cantidad);
+  }
+  r.total = r.partida+r.presupuesto+r.precio+r.otras; return r;
+}
+function countUp(el, to){
+  const from = +(el.dataset.v||0); el.dataset.v = to;
+  const t0 = performance.now(), d = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 900;
+  const step = t => { const k = d ? Math.min(1,(t-t0)/d) : 1; el.firstChild.nodeValue = '$'+Math.round(from+(to-from)*(1-Math.pow(1-k,3))).toLocaleString('es-MX'); if(k<1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+function renderLive(){
+  const casos = (DATA&&DATA.casos)||[]; const p = protegido(casos);
+  countUp($('#prot-total'), p.total);
+  const chip=(v,l)=>`<div class="chip"><b>$${fmtMx(v)}</b><span>${l}</span></div>`;
+  $('#prot-chips').innerHTML = chip(p.partida,'🚨 Compras partidas')+chip(p.presupuesto,'📊 Sin presupuesto')+chip(p.precio,'🏷️ Sobreprecio evitado')+(p.otras?chip(p.otras,'Otras reglas'):'');
+  const hoy = new Date().toLocaleDateString('en-CA',{timeZone:'America/Mexico_City'});
+  const deHoy = casos.filter(c=>c.creado && new Date(c.creado).toLocaleDateString('en-CA',{timeZone:'America/Mexico_City'})===hoy);
+  const bloq = casos.filter(c=>c.estado==='rechazado_entrada').length;
+  const usd = casos.reduce((s,c)=>s+(+c.costo_est_usd||0),0);
+  $('#live-mini').innerHTML = `<div><b>${deHoy.length}</b><span>solicitudes hoy</span></div><div><b>${bloq}</b><span>intentos de engaño bloqueados</span></div><div><b>$${usd.toFixed(3)}</b><span>USD de IA en total</span></div>`;
+  const ult = [...casos].sort((a,b)=>String(b.creado).localeCompare(String(a.creado))).slice(0,10);
+  const nuevos = VISTOS ? ult.filter(c=>!VISTOS.has(c.caso_id+c.estado)) : [];
+  VISTOS = new Set(casos.map(c=>c.caso_id+c.estado));
+  $('#feed').innerHTML = ult.length ? ult.map(c=>{ const mins = c.creado ? Math.max(0,Math.round((Date.now()-new Date(c.creado))/6e4)) : null;
+    const hace = mins===null?'':mins<1?'ahora':mins<60?`hace ${mins} min`:mins<1440?`hace ${Math.round(mins/60)} h`:`hace ${Math.round(mins/1440)} d`;
+    return `<li class="${nuevos.includes(c)?'new':''}"><span class="ic" aria-hidden="true">${ICON[c.estado]||'•'}</span><span class="t"><b class="mono">${esc(c.caso_id)}</b> · ${esc(c.concepto)} <span class="sub">· ${esc((ESTADOS[c.estado]||[c.estado])[0])} · ${hace}</span></span><span class="m">${c.monto_total?'$'+fmtMx(c.monto_total):''}</span></li>`; }).join('')
+    : '<li><span></span><span class="t">Aún no hay solicitudes.</span><span></span></li>';
+}
+async function pollLive(){
+  try{ const r = await fetch(LIVE_URL,{cache:'no-store'}); if(!r.ok) throw new Error(r.status); DATA = await r.json(); render(); $('#lv-txt').textContent='En vivo · '+new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',second:'2-digit'}); }
+  catch(e){ $('#lv-txt').textContent='En vivo no disponible'; setLive(false); }
+}
+function setLive(on){
+  LIVE = on; $('#lv-btn').setAttribute('aria-pressed', on?'true':'false'); clearInterval(liveTimer);
+  if(on){ pollLive(); liveTimer = setInterval(()=>{ if(!document.hidden) pollLive(); }, 10000); } else if($('#lv-txt').textContent.startsWith('En vivo ·')) $('#lv-txt').textContent='Activar en vivo';
+}
+$('#lv-btn').addEventListener('click',()=>setLive(!LIVE));
+(function qr(){
+  const s=document.createElement('script'); s.src='https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+  s.onload=()=>{ try{ new QRCode(document.getElementById('qrbox'),{text:'https://t.me/IAToolsN8N_bot?start=demo',width:168,height:168,correctLevel:QRCode.CorrectLevel.M}); }catch(e){} };
+  document.head.appendChild(s);
+})();
+load().then(()=>{ let q=''; try{q=new URLSearchParams(location.search).get('live')||''}catch(e){} if(q==='1') setLive(true); });
 </script>
 </body>
 </html>
