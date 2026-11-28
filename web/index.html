@@ -221,7 +221,7 @@ h4{font-size:13px;margin:18px 0 6px;color:var(--ink2);text-transform:uppercase;l
   </aside>
 </div>
 
-<div class="qr" id="qr" aria-label="Pruébalo desde tu celular"><b>📱 Pruébalo tú</b><div id="qrbox"></div><p>Escanea y pide algo como lo dirías normal. Máx. 2 por persona.</p></div>
+<div class="qr" id="qr" aria-label="Pruébalo desde tu celular"><button id="qr-x" aria-label="Ocultar QR" style="position:absolute;top:6px;right:8px;border:0;background:none;font-size:18px;cursor:pointer;color:var(--ink2)">×</button><b>📱 Pruébalo tú</b><div id="qrbox"></div><p>Escanea y pide algo como lo dirías normal. Máx. 2 por persona.</p></div>
 
 <button class="btn vozbtn" id="vozbtn" type="button">🎙️ Preguntar por voz</button>
 <div class="vozdlg" id="vozdlg" role="dialog" aria-label="Asistente de voz">
@@ -404,9 +404,11 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') cerrar(); if
 async function cargar(url) { const r = await fetch(url, {cache: 'no-store'}); if (!r.ok) throw new Error('HTTP ' + r.status); DATA = await r.json(); render(); }
 async function poll() { try { await cargar(LIVE_URL); $('#upd').textContent = 'En vivo · ' + new Date().toLocaleTimeString('es-MX', {hour: '2-digit', minute: '2-digit', second: '2-digit'}); } catch (e) { setLive(false); $('#upd').textContent = 'En vivo no disponible'; } }
 function setLive(on) {
-  LIVE = on; $('#live').setAttribute('aria-pressed', on ? 'true' : 'false'); $('#qr').classList.toggle('show', on); clearInterval(timer);
+  LIVE = on; $('#live').setAttribute('aria-pressed', on ? 'true' : 'false'); $('#qr').classList.toggle('show', on && !QR_OFF); clearInterval(timer);
   if (on) { poll(); const t0 = Date.now(); timer = setInterval(() => { if (Date.now() - t0 > 45 * 60e3) return setLive(false); if (!document.hidden) poll(); }, 20000); }
 }
+let QR_OFF = new URLSearchParams(location.search).get('qr') === '0';
+$('#qr-x').onclick = () => { QR_OFF = true; $('#qr').classList.remove('show'); };
 $('#live').onclick = () => setLive(!LIVE);
 (function qr() { const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
   s.onload = () => { try { new QRCode($('#qrbox'), {text: BOT, width: 170, height: 170, correctLevel: QRCode.CorrectLevel.M}); } catch (e) {} }; document.head.appendChild(s); })();
