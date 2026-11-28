@@ -56,7 +56,9 @@ if data:
         if c.get("veredicto") not in ("", None, "aprobado", "devuelto"): err(f"{cid}: veredicto no permitido")
         # 3. Cálculos deterministas
         q, pu, m = c.get("cantidad") or 0, c.get("precio_unitario") or 0, c.get("monto_total") or 0
-        if q and pu and abs(q * pu - m) > 0.01:
+        # Casos detenidos antes del cálculo (CC inválido, datos faltantes, entrada bloqueada) quedan con monto 0: no hay cálculo que verificar.
+        sin_calculo = m == 0 and c.get("estado") in ("requiere_aclaracion", "rechazado_entrada", "error_controlado", "detenido_presupuesto")
+        if q and pu and not sin_calculo and abs(q * pu - m) > 0.01:
             err(f"{cid}: monto_total {m} ≠ cantidad×precio_unitario {round(q * pu, 2)}")
         pr = c.get("precio_ref") or 0
         if pr and pu and abs((pu / pr - 1) * 100 - (c.get("variacion_precio") or 0)) > 0.11:
