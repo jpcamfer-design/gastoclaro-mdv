@@ -162,7 +162,7 @@ h4{font-size:13px;margin:18px 0 6px;color:var(--ink2);text-transform:uppercase;l
 
   <section class="grid c21">
     <div class="card">
-      <div class="head"><h2>Por aprobar</h2><span class="hint">Llegan al Budget Owner en Telegram con botones · vencen en 24 h</span></div>
+      <div class="head"><h2>Por aprobar</h2><span class="hint">Llegan al Budget Owner en Telegram con botones · vencen en 24 h · clic en una fila para abrir su 🔍 caja negra</span></div>
       <div class="scroll" id="pend"></div>
     </div>
     <div class="card">
@@ -195,7 +195,7 @@ h4{font-size:13px;margin:18px 0 6px;color:var(--ink2);text-transform:uppercase;l
   </section>
 
   <section class="card" id="todas">
-    <div class="head"><h2>Todas las solicitudes</h2>
+    <div class="head"><h2>Todas las solicitudes</h2><span class="hint">Clic en cualquier solicitud para ver su 🔍 caja negra</span>
       <div class="filters">
         <select id="f-g" aria-label="Filtrar por resultado"></select>
         <select id="f-a" aria-label="Filtrar por área"></select>
@@ -215,7 +215,7 @@ h4{font-size:13px;margin:18px 0 6px;color:var(--ink2);text-transform:uppercase;l
     </div>
     <div class="facts" id="d-facts"></div>
     <h4>Reglas de la empresa</h4><div class="rules" id="d-rules"></div>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:18px"><h4 style="margin:0">Cómo se decidió</h4><button class="btn" id="d-play" type="button">▶ Repetir</button></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:18px"><h4 style="margin:0">🔍 Caja negra · cómo se decidió</h4><button class="btn" id="d-play" type="button">▶ Repetir</button></div>
     <ol class="tl" id="d-tl"></ol>
     <div class="foot num" id="d-cost"></div>
   </aside>
@@ -306,7 +306,7 @@ function render() {
   $('#pend').innerHTML = pend.length ? `<table><thead><tr><th>Folio</th><th>Qué se pide</th><th class="hide-m">Área</th><th class="r">Monto</th><th>La IA recomienda</th><th class="hide-m">Vence</th></tr></thead><tbody>` +
     pend.sort((a, b) => new Date(a.creado) - new Date(b.creado)).map(c => { const v = new Date(new Date(c.creado).getTime() + 864e5); const h = Math.round((v - Date.now()) / 36e5);
       const rc = c.recomendacion === 'aprobar' || c.recomendacion === 'aprobar_con_condiciones' ? 't-ok' : 't-bad';
-      return `<tr data-id="${esc(c.caso_id)}"><td class="mono">${esc(c.caso_id)}</td><td class="concept">${esc(cap(c.concepto))}</td><td class="hide-m">${esc(area(c.centro_costo))}</td><td class="r num"><b>${mx(c.monto_total)}</b></td><td><span class="tag ${rc}">${esc(REC[c.recomendacion] || c.recomendacion || '—')}</span></td><td class="hide-m num" style="color:${h < 4 ? 'var(--bad)' : 'var(--ink2)'}">${h > 0 ? 'en ' + h + ' h' : 'vencida'}</td></tr>`; }).join('') + '</tbody></table>'
+      return `<tr data-id="${esc(c.caso_id)}"><td class="mono">${esc(c.caso_id)} <span title="Abrir caja negra" style="opacity:.7">🔍</span></td><td class="concept">${esc(cap(c.concepto))}</td><td class="hide-m">${esc(area(c.centro_costo))}</td><td class="r num"><b>${mx(c.monto_total)}</b></td><td><span class="tag ${rc}">${esc(REC[c.recomendacion] || c.recomendacion || '—')}</span></td><td class="hide-m num" style="color:${h < 4 ? 'var(--bad)' : 'var(--ink2)'}">${h > 0 ? 'en ' + h + ' h' : 'vencida'}</td></tr>`; }).join('') + '</tbody></table>'
     : '<div class="empty">🎉 Nada pendiente. Todas las solicitudes tienen decisión.</div>';
   // Alertas
   const al = [];
@@ -349,7 +349,7 @@ function tabla() {
   const g = $('#f-g').value, a = $('#f-a').value, q = $('#f-q').value.trim().toLowerCase();
   const rows = (DATA.casos || []).filter(c => c.caso_id && (!g || (EST[c.estado] || [])[3] === g) && (!a || c.centro_costo === a) && (!q || (c.caso_id + ' ' + c.concepto).toLowerCase().includes(q))).sort((x, y) => y.caso_id.localeCompare(x.caso_id));
   $('#tabla').innerHTML = rows.length ? `<table><thead><tr><th>Folio</th><th>Qué se pidió</th><th class="hide-m">Área</th><th class="r">Monto</th><th>Resultado</th><th class="hide-m">Cuándo</th></tr></thead><tbody>` +
-    rows.map(c => `<tr data-id="${esc(c.caso_id)}"><td class="mono">${esc(c.caso_id)}</td><td class="concept">${esc(cap(c.concepto))}</td><td class="hide-m">${esc(area(c.centro_costo))}</td><td class="r num">${c.monto_total ? mx(c.monto_total) : '—'}</td><td>${tag(c.estado)}</td><td class="hide-m" style="color:var(--ink2)">${hace(c.creado)}</td></tr>`).join('') + '</tbody></table>'
+    rows.map(c => `<tr data-id="${esc(c.caso_id)}"><td class="mono">${esc(c.caso_id)} <span title="Abrir caja negra" style="opacity:.7">🔍</span></td><td class="concept">${esc(cap(c.concepto))}</td><td class="hide-m">${esc(area(c.centro_costo))}</td><td class="r num">${c.monto_total ? mx(c.monto_total) : '—'}</td><td>${tag(c.estado)}</td><td class="hide-m" style="color:var(--ink2)">${hace(c.creado)}</td></tr>`).join('') + '</tbody></table>'
     : '<div class="empty">Ninguna solicitud con esos filtros.</div>';
 }
 ['#f-g', '#f-a'].forEach(s => $(s).addEventListener('change', tabla)); $('#f-r').onclick = () => { $('#f-g').value = ''; $('#f-a').value = ''; $('#f-q').value = ''; tabla(); }; $('#f-q').addEventListener('input', tabla);
